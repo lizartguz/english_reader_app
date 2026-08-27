@@ -165,11 +165,12 @@ Referencia: https://pub.dev/packages/flutter_launcher_icons
 
 Debe respetar archivos protegidos y headers de autenticación cuando corresponda.
 
-## Pendientes de aprobación
+## Decisiones cerradas
 
-- Confirmar `dio` frente a `http`.
-- Confirmar uso de `cached_network_image` si las imágenes protegidas requieren headers personalizados.
-- Confirmar si se usará `provider` directo o solo `RepositoryProvider` de `flutter_bloc` para dependencias.
+- `dio` queda como cliente HTTP por interceptores, refresh token y mapeo de errores.
+- `cached_network_image` queda aprobado para imágenes con URL autorizada por API.
+- `provider` se usa para inyección de dependencias y servicios compartidos; BLoC conserva el estado de flujos.
+- Los smoke tests de flujo usan `flutter_test` con rutas y widgets reales.
 
 ## Criterios de cierre
 
@@ -183,4 +184,4 @@ Este documento se considera suficiente cuando define:
 - cliente HTTP
 - TTS
 - imágenes
-- pendientes de aprobación
+- decisiones de dependencias

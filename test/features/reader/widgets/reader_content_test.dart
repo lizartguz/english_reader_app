@@ -1,6 +1,7 @@
 import 'package:english_reader_app/core/constants/app_keys.dart';
 import 'package:english_reader_app/features/reader/presentation/widgets/reader_content.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -37,6 +38,29 @@ void main() {
     );
 
     expect(find.bySemanticsLabel('Consultar palabra Hello'), findsOneWidget);
+  });
+
+  testWidgets('ReaderContent permite activar palabras con teclado', (
+    tester,
+  ) async {
+    String? selectedWord;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ReaderContent(
+            content: 'Hello reader.',
+            onWordTap: (word) => selectedWord = word,
+          ),
+        ),
+      ),
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+
+    expect(selectedWord, 'Hello');
   });
 
   testWidgets('ReaderContent aplica tamaño e interlineado configurados', (

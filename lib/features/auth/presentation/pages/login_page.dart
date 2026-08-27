@@ -73,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Correo electrónico',
                           prefixIcon: Icon(Icons.mail_outline),
@@ -90,6 +91,8 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         autofillHints: const [AutofillHints.password],
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
                           labelText: 'Contraseña',
                           prefixIcon: const Icon(Icons.lock_outline),

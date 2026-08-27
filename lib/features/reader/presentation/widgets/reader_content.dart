@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/accessibility/app_semantics.dart';
 import '../../../../core/constants/app_keys.dart';
@@ -100,18 +101,39 @@ class _WordToken extends StatelessWidget {
           label: AppSemantics.readerWord(word),
           onTap: () => onWordTap(word),
           child: ExcludeSemantics(
-            child: InkWell(
-              key: AppKeys.readerWordToken(word, index),
-              borderRadius: BorderRadius.circular(4),
-              onTap: () => onWordTap(word),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: Text(
-                  word,
-                  style: textStyle?.copyWith(
-                    decoration: TextDecoration.underline,
-                    decorationColor: Theme.of(context).colorScheme.secondary,
-                    decorationThickness: 1.4,
+            child: Shortcuts(
+              shortcuts: const {
+                SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+                SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+              },
+              child: Actions(
+                actions: {
+                  ActivateIntent: CallbackAction<ActivateIntent>(
+                    onInvoke: (_) {
+                      onWordTap(word);
+                      return null;
+                    },
+                  ),
+                },
+                child: InkWell(
+                  key: AppKeys.readerWordToken(word, index),
+                  borderRadius: BorderRadius.circular(4),
+                  focusColor: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withValues(alpha: 0.18),
+                  onTap: () => onWordTap(word),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: Text(
+                      word,
+                      style: textStyle?.copyWith(
+                        decoration: TextDecoration.underline,
+                        decorationColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary,
+                        decorationThickness: 1.4,
+                      ),
+                    ),
                   ),
                 ),
               ),

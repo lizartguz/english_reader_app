@@ -125,6 +125,12 @@ Error local de Flutter, red o dispositivo
   -> mostrar mensaje amigable definido en Flutter
 ```
 
+La implementación vigente centraliza esta traducción en `mapDioException()`.
+El mapper interpreta fallos de transporte, cancelaciones, 401, 403, 404, 409,
+422, 429 y 5xx. Los códigos estables de la API tienen prioridad sobre textos
+variables; los errores 5xx usan el fallback local para no exponer detalles
+técnicos.
+
 Si la API devuelve un error técnico inesperado, Flutter no debe mostrarlo al
 usuario. Debe usar un mensaje genérico y, cuando corresponda, enviar el contexto
 necesario a los logs del backend o al mecanismo de monitoreo definido.
@@ -147,6 +153,36 @@ Si el usuario intenta acceder a una función no autorizada, debe mostrarse un me
 
 ```text
 No tienes permiso para realizar esta acción.
+```
+
+## Verificación real con API local
+
+El proyecto incluye `tool/verify_real_api_flow.dart` para validar el contrato
+real sin escribir tokens en disco.
+
+Flujo validado:
+
+```text
+login cliente
+  -> GET /app/stories
+  -> GET /app/words/lookup
+  -> POST /app/vocabulary
+```
+
+Comando local:
+
+```bash
+dart run tool/verify_real_api_flow.dart
+```
+
+Parámetros opcionales:
+
+```bash
+dart run tool/verify_real_api_flow.dart \
+  --base-url=http://localhost:3000/api/v1 \
+  --email=cliente.flutter.test@englishreader.local \
+  --password=Cliente123* \
+  --word=hello
 ```
 
 ## Archivos protegidos

@@ -28,4 +28,31 @@ class AppSemantics {
   static String pronouncingWord(String word) {
     return 'Reproduciendo pronunciación de $word';
   }
+
+  /// Describe el progreso visible del lector sin depender solo del indicador visual.
+  static String readingProgress(double percent) {
+    return 'Progreso de lectura ${percent.round()} por ciento';
+  }
+
+  /// Describe una palabra guardada dentro del vocabulario personal.
+  static String vocabularyEntry({
+    required String word,
+    String? translation,
+    required String status,
+  }) {
+    final translated = translation == null || translation.isEmpty
+        ? ''
+        : ', traducción $translation';
+    return 'Palabra guardada $word$translated, estado $status';
+  }
+
+  /// Describe el menú contextual de una palabra guardada.
+  static String vocabularyActions(String word) {
+    return 'Acciones para $word';
+  }
+
+  /// Describe la acción principal de guardar una palabra.
+  static String saveWord(String word) {
+    return 'Guardar $word en vocabulario';
+  }
 }

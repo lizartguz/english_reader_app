@@ -111,6 +111,16 @@ Si la API indica falta de autorización:
 No tienes permiso para realizar esta acción.
 ```
 
+## Accesibilidad operativa
+
+El lector debe permitir seleccionar palabras tanto con gesto táctil/clic como
+con teclado. Las palabras consultables aceptan Enter y Espacio cuando tienen el
+foco.
+
+El indicador de progreso del lector expone una etiqueta semántica con el
+porcentaje visible. Las filas de vocabulario exponen palabra, traducción y
+estado, y el menú de acciones usa un tooltip específico por palabra.
+
 ## Responsive
 
 La app debe funcionar en:
@@ -150,4 +160,5 @@ Este documento se considera suficiente cuando define:
 - mensajes amigables
 - API caída
 - no autorizado
+- accesibilidad operativa
 - responsive

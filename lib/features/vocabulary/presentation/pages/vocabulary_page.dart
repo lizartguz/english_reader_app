@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/accessibility/app_semantics.dart';
 import '../../../../core/constants/app_keys.dart';
 import '../../../../core/layout/responsive_breakpoints.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -109,50 +110,85 @@ class _VocabularyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
+    final statusLabel = _statusLabel(entry.status);
+
+    return Padding(
       key: AppKeys.vocabularyTile(entry.id),
-      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-      title: Text(entry.word.word),
-      subtitle: Text(_subtitle),
-      trailing: busy
-          ? const SizedBox.square(
-              dimension: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : PopupMenuButton<String>(
-              key: AppKeys.vocabularyActions(entry.id),
-              tooltip: 'Acciones',
-              onSelected: (value) => _handleAction(context, value),
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: 'status:saved',
-                  child: Text('Marcar como guardada'),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              label: AppSemantics.vocabularyEntry(
+                word: entry.word.word,
+                translation: entry.word.primaryTranslation,
+                status: statusLabel,
+              ),
+              child: ExcludeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.word.word,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _subtitle(statusLabel),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                PopupMenuItem(
-                  value: 'status:learning',
-                  child: Text('Marcar en aprendizaje'),
-                ),
-                PopupMenuItem(
-                  value: 'status:learned',
-                  child: Text('Marcar aprendida'),
-                ),
-                PopupMenuItem(
-                  value: 'status:archived',
-                  child: Text('Archivar'),
-                ),
-                PopupMenuItem(value: 'notes', child: Text('Editar nota')),
-                PopupMenuDivider(),
-                PopupMenuItem(value: 'delete', child: Text('Eliminar')),
-              ],
+              ),
             ),
+          ),
+          busy
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : PopupMenuButton<String>(
+                  key: AppKeys.vocabularyActions(entry.id),
+                  tooltip: AppSemantics.vocabularyActions(entry.word.word),
+                  onSelected: (value) => _handleAction(context, value),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'status:saved',
+                      child: Text('Marcar como guardada'),
+                    ),
+                    PopupMenuItem(
+                      value: 'status:learning',
+                      child: Text('Marcar en aprendizaje'),
+                    ),
+                    PopupMenuItem(
+                      value: 'status:learned',
+                      child: Text('Marcar aprendida'),
+                    ),
+                    PopupMenuItem(
+                      value: 'status:archived',
+                      child: Text('Archivar'),
+                    ),
+                    PopupMenuItem(value: 'notes', child: Text('Editar nota')),
+                    PopupMenuDivider(),
+                    PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                  ],
+                ),
+        ],
+      ),
     );
   }
 
-  String get _subtitle {
+  /// Une datos de estudio en una sola línea para lectura rápida.
+  String _subtitle(String statusLabel) {
     return [
       if (entry.word.primaryTranslation != null) entry.word.primaryTranslation,
       if (entry.storyTitle != null) entry.storyTitle,
-      _statusLabel(entry.status),
+      statusLabel,
       if (entry.notes != null && entry.notes!.isNotEmpty) entry.notes,
     ].join(' · ');
   }

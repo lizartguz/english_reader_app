@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/accessibility/app_semantics.dart';
 import '../../../../core/constants/app_keys.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading_view.dart';
@@ -164,7 +165,12 @@ class _ReaderBodyState extends State<_ReaderBody> {
 
     return Column(
       children: [
-        LinearProgressIndicator(value: progress.clamp(0, 100) / 100),
+        Semantics(
+          label: AppSemantics.readingProgress(progress),
+          value: '${progress.round()}%',
+          liveRegion: true,
+          child: LinearProgressIndicator(value: progress.clamp(0, 100) / 100),
+        ),
         Expanded(
           child: SingleChildScrollView(
             key: AppKeys.readerScroll,
@@ -195,12 +201,15 @@ class _ReaderBodyState extends State<_ReaderBody> {
                       ),
                     ],
                     const SizedBox(height: 28),
-                    ReaderContent(
-                      content: story.content ?? '',
-                      fontScale: settings.fontScale,
-                      lineHeight: settings.lineHeight,
-                      onWordTap: (word) => context.read<ReaderBloc>().add(
-                        ReaderWordSelected(word),
+                    FocusTraversalGroup(
+                      policy: ReadingOrderTraversalPolicy(),
+                      child: ReaderContent(
+                        content: story.content ?? '',
+                        fontScale: settings.fontScale,
+                        lineHeight: settings.lineHeight,
+                        onWordTap: (word) => context.read<ReaderBloc>().add(
+                          ReaderWordSelected(word),
+                        ),
                       ),
                     ),
                   ],

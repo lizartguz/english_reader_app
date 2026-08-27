@@ -91,6 +91,11 @@ Reglas:
 Los controles que no se explican bien solo con su texto visible deben usar
 etiquetas semánticas centralizadas en `AppSemantics`.
 
+Los widgets interactivos de lectura y vocabulario deben considerar teclado y
+lector de pantalla cuando se usen en Web/escritorio. Las acciones no textuales
+requieren tooltip y las etiquetas semánticas reutilizables deben vivir en
+`AppSemantics`.
+
 ## Servicios
 
 Los servicios deben centralizar:

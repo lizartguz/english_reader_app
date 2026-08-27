@@ -139,21 +139,31 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
                 ),
               ],
               const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: word.isSaved || widget.isSaving
-                    ? null
-                    : widget.onSave,
-                icon: widget.isSaving
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        word.isSaved
-                            ? Icons.bookmark_added
-                            : Icons.bookmark_add_outlined,
-                      ),
-                label: Text(word.isSaved ? 'Guardada' : 'Guardar palabra'),
+              Semantics(
+                button: true,
+                label: AppSemantics.saveWord(word.word),
+                enabled: !word.isSaved && !widget.isSaving,
+                child: Tooltip(
+                  message: word.isSaved
+                      ? '${word.word} ya esta guardada'
+                      : AppSemantics.saveWord(word.word),
+                  child: FilledButton.icon(
+                    onPressed: word.isSaved || widget.isSaving
+                        ? null
+                        : widget.onSave,
+                    icon: widget.isSaving
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            word.isSaved
+                                ? Icons.bookmark_added
+                                : Icons.bookmark_add_outlined,
+                          ),
+                    label: Text(word.isSaved ? 'Guardada' : 'Guardar palabra'),
+                  ),
+                ),
               ),
             ],
           ),
