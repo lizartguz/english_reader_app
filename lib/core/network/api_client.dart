@@ -4,19 +4,24 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 import '../../app/config/app_config.dart';
+import '../auth/auth_session_transport.dart';
+import '../auth/session_restorer.dart';
+import '../auth/session_token_store.dart';
 import '../constants/app_messages.dart';
-import '../constants/storage_keys.dart';
 import '../errors/app_exception.dart';
 import '../storage/device_identity_service.dart';
-import '../storage/secure_storage_service.dart';
+import 'csrf_token_reader.dart';
 
 /// Cliente HTTP centralizado para consumir el contrato versionado de la API.
-class ApiClient {
+class ApiClient implements SessionRestorer {
   ApiClient({
     required AppConfig config,
-    required SecureStorageService secureStorage,
+    required AuthSessionTransport authSessionTransport,
+    required SessionTokenStore tokenStore,
     required DeviceIdentityService deviceIdentity,
-  }) : _secureStorage = secureStorage,
+  }) : _config = config,
+       _authSessionTransport = authSessionTransport,
+       _tokenStore = tokenStore,
        _deviceIdentity = deviceIdentity,
        _dio = Dio(
          BaseOptions(
@@ -34,8 +39,10 @@ class ApiClient {
     );
   }
 
+  final AppConfig _config;
+  final AuthSessionTransport _authSessionTransport;
   final Dio _dio;
-  final SecureStorageService _secureStorage;
+  final SessionTokenStore _tokenStore;
   final DeviceIdentityService _deviceIdentity;
   final StreamController<AppException> _sessionIssues =
       StreamController<AppException>.broadcast();
@@ -85,8 +92,20 @@ class ApiClient {
 
   /// Devuelve cabeceras autenticadas para componentes que requieren URL directa.
   Future<Map<String, String>> authorizationHeaders() async {
-    final token = await _secureStorage.read(StorageKeys.accessToken);
+    final token = await _tokenStore.readAccessToken();
     return token == null ? const {} : {'Authorization': 'Bearer $token'};
+  }
+
+  /// Recupera la sesión cuando no hay access token en memoria.
+  ///
+  /// En Web el access token se pierde a propósito al recargar la página; la
+  /// cookie `HttpOnly` sigue viva, así que se pide uno nuevo antes de dar la
+  /// sesión por terminada. En nativo no hace falta: el token está en el
+  /// almacenamiento seguro.
+  @override
+  Future<bool> restoreSession() {
+    if (!_authSessionTransport.usesCookieRefresh) return Future.value(false);
+    return _refreshSession();
   }
 
   /// Adjunta el access token sin exponerlo a widgets ni repositorios.
@@ -94,7 +113,8 @@ class ApiClient {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _secureStorage.read(StorageKeys.accessToken);
+    _attachWebCookieOptions(options);
+    final token = await _tokenStore.readAccessToken();
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -117,7 +137,7 @@ class ApiClient {
     if (canRefresh && await _refreshSession()) {
       final retryOptions = error.requestOptions;
       retryOptions.extra['retried'] = true;
-      final token = await _secureStorage.read(StorageKeys.accessToken);
+      final token = await _tokenStore.readAccessToken();
       if (token != null) {
         retryOptions.headers['Authorization'] = 'Bearer $token';
       }
@@ -143,29 +163,39 @@ class ApiClient {
   Future<bool> _refreshSession() async {
     if (_refreshing) return false;
 
-    final refreshToken = await _secureStorage.read(StorageKeys.refreshToken);
-    if (refreshToken == null || refreshToken.isEmpty) return false;
+    final refreshToken = await _tokenStore.readRefreshToken();
+    final usesCookieRefresh = _authSessionTransport.usesCookieRefresh;
+    if (!usesCookieRefresh && (refreshToken == null || refreshToken.isEmpty)) {
+      return false;
+    }
 
     _refreshing = true;
     try {
       final response = await _dio.post<dynamic>(
         '/auth/refresh',
         data: {
-          'clientType': 'mobile',
-          'refreshToken': refreshToken,
+          'clientType': _authSessionTransport.clientType,
+          if (!usesCookieRefresh) 'refreshToken': refreshToken,
           'device': await _deviceIdentity.devicePayload(),
         },
-        options: Options(extra: {'skipRefresh': true}),
+        options: Options(
+          extra: {
+            'skipRefresh': true,
+            if (usesCookieRefresh) 'withCredentials': true,
+          },
+          headers: _csrfHeadersIfNeeded(),
+        ),
       );
       final payload = ApiPayload<Map<String, dynamic>>.fromJson(response.data);
       final session = payload.data;
       final nextAccessToken = session?['accessToken'] as String?;
       final nextRefreshToken = session?['refreshToken'] as String?;
 
-      if (nextAccessToken == null || nextRefreshToken == null) return false;
+      if (nextAccessToken == null) return false;
+      if (!usesCookieRefresh && nextRefreshToken == null) return false;
 
-      await _secureStorage.write(StorageKeys.accessToken, nextAccessToken);
-      await _secureStorage.write(StorageKeys.refreshToken, nextRefreshToken);
+      await _tokenStore.writeAccessToken(nextAccessToken);
+      await _tokenStore.writeRefreshToken(nextRefreshToken);
       return true;
     } catch (_) {
       return false;
@@ -180,6 +210,27 @@ class ApiClient {
     return options.path.contains('/auth/login') ||
         options.path.contains('/auth/refresh') ||
         options.path.contains('/auth/logout');
+  }
+
+  /// Habilita cookies y CSRF para Flutter Web sin afectar plataformas nativas.
+  void _attachWebCookieOptions(RequestOptions options) {
+    if (!_authSessionTransport.usesCookieRefresh) return;
+
+    options.extra['withCredentials'] = true;
+    final csrfHeaders = _csrfHeadersIfNeeded();
+    if (csrfHeaders == null) return;
+
+    options.headers.addAll(csrfHeaders);
+  }
+
+  /// Devuelve la cabecera CSRF cuando la cookie legible está disponible.
+  Map<String, String>? _csrfHeadersIfNeeded() {
+    if (!_authSessionTransport.usesCookieRefresh) return null;
+
+    final csrfToken = readCsrfToken(_config.csrfCookieName);
+    if (csrfToken == null || csrfToken.isEmpty) return null;
+
+    return {'X-CSRF-Token': csrfToken};
   }
 
   /// Traduce errores 401 en eventos que la capa de auth puede observar.

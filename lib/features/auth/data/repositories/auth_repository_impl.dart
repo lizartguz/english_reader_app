@@ -1,9 +1,11 @@
 import '../../../../core/constants/app_messages.dart';
 import '../../../../core/constants/storage_keys.dart';
+import '../../../../core/auth/auth_session_transport.dart';
+import '../../../../core/auth/session_restorer.dart';
+import '../../../../core/auth/session_token_store.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/device_identity_service.dart';
 import '../../../../core/storage/preferences_service.dart';
-import '../../../../core/storage/secure_storage_service.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -12,16 +14,22 @@ import '../datasources/auth_remote_datasource.dart';
 class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
-    required SecureStorageService secureStorage,
+    required AuthSessionTransport authSessionTransport,
+    required SessionTokenStore tokenStore,
+    required SessionRestorer sessionRestorer,
     required PreferencesService preferences,
     required DeviceIdentityService deviceIdentity,
   }) : _remoteDataSource = remoteDataSource,
-       _secureStorage = secureStorage,
+       _authSessionTransport = authSessionTransport,
+       _tokenStore = tokenStore,
+       _sessionRestorer = sessionRestorer,
        _preferences = preferences,
        _deviceIdentity = deviceIdentity;
 
   final AuthRemoteDataSource _remoteDataSource;
-  final SecureStorageService _secureStorage;
+  final AuthSessionTransport _authSessionTransport;
+  final SessionTokenStore _tokenStore;
+  final SessionRestorer _sessionRestorer;
   final PreferencesService _preferences;
   final DeviceIdentityService _deviceIdentity;
 
@@ -34,7 +42,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final session = await _remoteDataSource.login({
         'email': email,
         'password': password,
-        'clientType': 'mobile',
+        'clientType': _authSessionTransport.clientType,
         'device': await _deviceIdentity.devicePayload(),
       });
       await _persistSession(session);
@@ -92,8 +100,20 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthUser?> verifySession() async {
     final hasFlag = await hasLocalSession();
-    final accessToken = await _secureStorage.read(StorageKeys.accessToken);
-    if (!hasFlag || accessToken == null) return null;
+    if (!hasFlag) return null;
+
+    var accessToken = await _tokenStore.readAccessToken();
+    if (accessToken == null && _tokenStore.keepsAccessTokenInMemory) {
+      // Recarga de página en Web: el token en memoria se perdió, pero la cookie
+      // de refresco sigue viva y puede devolver la sesión sin pedir credenciales.
+      if (await _sessionRestorer.restoreSession()) {
+        accessToken = await _tokenStore.readAccessToken();
+      }
+    }
+    if (accessToken == null) {
+      await clearSession();
+      return null;
+    }
 
     try {
       return _remoteDataSource.verifySession();
@@ -106,10 +126,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    final refreshToken = await _secureStorage.read(StorageKeys.refreshToken);
+    final refreshToken = await _tokenStore.readRefreshToken();
     try {
       await _remoteDataSource.logout({
-        'clientType': 'mobile',
+        'clientType': _authSessionTransport.clientType,
         if (refreshToken != null) 'refreshToken': refreshToken,
       });
     } catch (_) {
@@ -125,19 +145,14 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<void> _persistSession(AuthSession session) async {
-    await _secureStorage.write(StorageKeys.accessToken, session.accessToken);
-    if (session.refreshToken != null) {
-      await _secureStorage.write(
-        StorageKeys.refreshToken,
-        session.refreshToken!,
-      );
-    }
+    await _tokenStore.writeAccessToken(session.accessToken);
+    // En Web `refreshToken` llega nulo: queda en la cookie HttpOnly de la API.
+    await _tokenStore.writeRefreshToken(session.refreshToken);
     await _preferences.setBool(StorageKeys.isLoggedIn, true);
   }
 
   Future<void> clearSession() async {
-    await _secureStorage.delete(StorageKeys.accessToken);
-    await _secureStorage.delete(StorageKeys.refreshToken);
+    await _tokenStore.clear();
     await _preferences.setBool(StorageKeys.isLoggedIn, false);
   }
 }

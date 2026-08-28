@@ -52,11 +52,13 @@ void main() {
         apiBaseUrl: 'https://api.readeriz.com/api/v1',
         environment: 'production',
         appVersion: '1.2.3',
+        csrfCookieName: 'readeriz_csrf',
       );
 
       expect(config.apiBaseUrl, 'https://api.readeriz.com/api/v1');
       expect(config.environment, 'production');
       expect(config.appVersion, '1.2.3');
+      expect(config.csrfCookieName, 'readeriz_csrf');
     });
   });
 }

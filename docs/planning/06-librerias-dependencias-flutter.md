@@ -103,9 +103,12 @@ Referencia: https://pub.dev/packages/shared_preferences
 Uso:
 
 - access token
-- refresh token
+- refresh token en móvil
 - device id
 - datos mínimos de sesión sensibles
+
+En Flutter Web el refresh token no se persiste con `flutter_secure_storage`: se
+recibe como cookie `HttpOnly` desde la API y se acompaña con CSRF.
 
 La versión Android vigente queda fijada en `10.3.1` porque compila contra SDK
 36 y mantiene la implementación segura de la rama 10.x. La versión 11.x exige

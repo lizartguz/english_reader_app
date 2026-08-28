@@ -33,13 +33,19 @@ usuario inicia sesión
   -> Flutter renueva sesión cuando corresponda
 ```
 
-Para móvil, los tokens deben guardarse en almacenamiento seguro del dispositivo.
+Para móvil, el access token y el refresh token deben guardarse en
+almacenamiento seguro del dispositivo usando `clientType: mobile`.
 
-Para Flutter Web, la estrategia debe revisarse según restricciones del navegador.
+Para Flutter Web, la app debe enviar `clientType: app_web`: el access token se
+mantiene del lado Flutter y el refresh token viaja en cookie `HttpOnly` emitida
+por la API. Flutter Web no debe persistir el refresh token.
 
 `shared_preferences` no debe almacenar tokens sensibles. Debe usarse para flags y preferencias no sensibles, como recordar que existe sesión local, tema visual o datos mínimos de UI.
 
 Los tokens deben guardarse con almacenamiento seguro cuando la plataforma lo permita.
+
+Cuando Flutter Web renueva sesión, debe enviar cookies del navegador y repetir
+la cookie CSRF legible en la cabecera `X-CSRF-Token`.
 
 ## Dispositivo único por usuario
 

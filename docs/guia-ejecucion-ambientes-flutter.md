@@ -36,6 +36,7 @@ APP_ENV=production
 | `API_BASE_URL` | Define la URL de la API que consume la app. | `https://api.readeriz.com/api/v1` |
 | `APP_ENV` | Define el ambiente de ejecución. | `development`, `staging`, `production` |
 | `APP_VERSION` | Define una versión visible o trazable de la app si se necesita. | `1.0.0` |
+| `CSRF_COOKIE_NAME` | Define la cookie CSRF legible usada por Flutter Web. | `er_csrf_token` |
 
 ## Desarrollo local
 
@@ -133,6 +134,7 @@ mal configurada.
 - Nombre de ambiente.
 - Flags simples de configuración.
 - Versiones visibles.
+- Nombres públicos de cookies o cabeceras.
 
 ## Qué no pasar por dart-define
 

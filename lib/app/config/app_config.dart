@@ -6,6 +6,7 @@ class AppConfig {
     required this.apiBaseUrl,
     required this.environment,
     required this.appVersion,
+    required this.csrfCookieName,
   });
 
   /// Lee la configuración real de compilación y aplica las reglas de seguridad.
@@ -19,11 +20,16 @@ class AppConfig {
       'APP_VERSION',
       defaultValue: '0.1.0',
     );
+    const configuredCsrfCookieName = String.fromEnvironment(
+      'CSRF_COOKIE_NAME',
+      defaultValue: 'er_csrf_token',
+    );
 
     return AppConfig.resolve(
       apiBaseUrl: configuredBaseUrl,
       environment: configuredEnvironment,
       appVersion: configuredAppVersion,
+      csrfCookieName: configuredCsrfCookieName,
       isWeb: kIsWeb,
       targetPlatform: defaultTargetPlatform,
     );
@@ -32,6 +38,7 @@ class AppConfig {
   final String apiBaseUrl;
   final String environment;
   final String appVersion;
+  final String csrfCookieName;
 
   /// Resuelve la configuración permitiendo probar reglas sin depender del build.
   @visibleForTesting
@@ -39,6 +46,7 @@ class AppConfig {
     String apiBaseUrl = '',
     String environment = 'development',
     String appVersion = '0.1.0',
+    String csrfCookieName = 'er_csrf_token',
     bool isWeb = false,
     TargetPlatform targetPlatform = TargetPlatform.android,
   }) {
@@ -58,6 +66,9 @@ class AppConfig {
       apiBaseUrl: resolvedBaseUrl,
       environment: normalizedEnvironment,
       appVersion: appVersion,
+      csrfCookieName: csrfCookieName.trim().isEmpty
+          ? 'er_csrf_token'
+          : csrfCookieName.trim(),
     );
   }
 

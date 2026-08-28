@@ -1,4 +1,6 @@
 import '../../core/media/story_asset_loader.dart';
+import '../../core/auth/auth_session_transport.dart';
+import '../../core/auth/session_token_store.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/device_identity_service.dart';
 import '../../core/storage/preferences_service.dart';
@@ -45,7 +47,14 @@ class AppDependencies {
 
   static Future<AppDependencies> create() async {
     final config = AppConfig.fromEnvironment();
+    final authSessionTransport = const AuthSessionTransport();
     final secureStorage = SecureStorageService();
+    // Concentra dónde vive cada token: memoria en Web, almacenamiento seguro
+    // en nativo. Lo comparten el cliente HTTP y el repositorio de auth.
+    final tokenStore = SessionTokenStore(
+      transport: authSessionTransport,
+      secureStorage: secureStorage,
+    );
     final preferences = await PreferencesService.create();
     final deviceIdentity = DeviceIdentityService(
       secureStorage: secureStorage,
@@ -53,14 +62,17 @@ class AppDependencies {
     );
     final apiClient = ApiClient(
       config: config,
-      secureStorage: secureStorage,
+      authSessionTransport: authSessionTransport,
+      tokenStore: tokenStore,
       deviceIdentity: deviceIdentity,
     );
 
     final storyAssetLoader = StoryAssetLoader(apiClient);
     final authRepository = AuthRepositoryImpl(
       remoteDataSource: AuthRemoteDataSource(apiClient),
-      secureStorage: secureStorage,
+      authSessionTransport: authSessionTransport,
+      tokenStore: tokenStore,
+      sessionRestorer: apiClient,
       preferences: preferences,
       deviceIdentity: deviceIdentity,
     );

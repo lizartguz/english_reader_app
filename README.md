@@ -6,9 +6,10 @@ Aplicacion Flutter para usuarios cliente de Readeriz.
 
 - Configuracion por ambiente con `API_BASE_URL`, `APP_ENV` y `APP_VERSION`.
 - Nombre de app centralizado en `AppInfo.displayName` y logo base en `assets/images/logo/logo.png`.
-- Cliente HTTP con Dio, envoltura `{ success, message, data, meta }`, bearer token y refresh token.
+- Cliente HTTP con Dio, envoltura `{ success, message, data, meta }`, bearer token y refresh token por transporte.
 - Normalizacion de errores por red, sesion, permisos, no encontrado, conflicto, validacion, rate limit y fallos 5xx.
-- Sesion movil con `device_id`, `clientType: mobile`, almacenamiento seguro y verificacion inicial.
+- Sesion movil con `clientType: mobile`, refresh token en almacenamiento seguro y verificacion inicial.
+- Sesion Flutter Web con `clientType: app_web`, refresh token en cookie HttpOnly y CSRF por cookie legible.
 - Manejo global de sesion expirada o invalidada con retorno a login.
 - Navegacion con `go_router` y rutas protegidas.
 - Doble back para salir en Android desde la pantalla principal.

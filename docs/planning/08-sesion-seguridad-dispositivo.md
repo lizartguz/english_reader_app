@@ -41,6 +41,21 @@ Uso recomendado:
 - refresh token
 - device_id
 
+En Flutter Web **ningún token se persiste**. `flutter_secure_storage` usa
+`localStorage` en navegador, así que guardar allí un token equivaldría a dejarlo
+al alcance de cualquier XSS. Por eso:
+
+- El refresh token lo emite la API como cookie `HttpOnly` para
+  `clientType: app_web`, y la app nunca lo ve; solo repite la cookie CSRF
+  legible en la cabecera `X-CSRF-Token` al renovar sesión.
+- El access token vive solo en memoria (`SessionTokenStore`) y se pierde a
+  propósito al recargar la página. Al arrancar, si la bandera local dice que
+  había sesión, la app pide un access token nuevo con la cookie antes de
+  mandar al usuario al login.
+
+En plataformas nativas ambos tokens siguen en almacenamiento seguro, respaldado
+por Keystore/Keychain.
+
 El `device_id` identifica la instalación/dispositivo y debe mantenerse incluso después de cerrar sesión, salvo que se limpie la app o se reinstale.
 
 ## Device ID
