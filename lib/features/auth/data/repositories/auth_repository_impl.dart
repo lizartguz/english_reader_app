@@ -45,6 +45,51 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<String> register({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    String? phone,
+  }) async {
+    try {
+      return await _remoteDataSource.register({
+        'email': email,
+        'password': password,
+        'firstName': firstName,
+        'lastName': lastName,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+      });
+    } catch (error) {
+      throw mapDioException(error, AppMessages.registerError);
+    }
+  }
+
+  @override
+  Future<String> requestPasswordReset(String email) async {
+    try {
+      return await _remoteDataSource.forgotPassword(email);
+    } catch (error) {
+      throw mapDioException(error, AppMessages.passwordResetError);
+    }
+  }
+
+  @override
+  Future<String> resetPassword({
+    required String token,
+    required String password,
+  }) async {
+    try {
+      return await _remoteDataSource.resetPassword(
+        token: token,
+        password: password,
+      );
+    } catch (error) {
+      throw mapDioException(error, AppMessages.passwordResetError);
+    }
+  }
+
+  @override
   Future<AuthUser?> verifySession() async {
     final hasFlag = await hasLocalSession();
     final accessToken = await _secureStorage.read(StorageKeys.accessToken);

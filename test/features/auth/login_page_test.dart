@@ -69,6 +69,24 @@ class _FakeAuthRepository implements AuthRepository {
   Future<bool> hasLocalSession() async => false;
 
   @override
+  Future<String> register({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    String? phone,
+  }) async => 'Cuenta creada.';
+
+  @override
+  Future<String> requestPasswordReset(String email) async => 'Correo enviado.';
+
+  @override
+  Future<String> resetPassword({
+    required String token,
+    required String password,
+  }) async => 'Contrasena actualizada.';
+
+  @override
   Future<AuthUser?> verifySession() async => null;
 }
 

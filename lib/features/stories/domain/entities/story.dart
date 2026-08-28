@@ -31,9 +31,14 @@ class Story extends Equatable {
   final List<StoryAsset> assets;
   final String? content;
 
-  StoryAsset? get coverImage {
+  StoryAsset? get coverImage => _firstAssetOfType('cover_image');
+
+  /// Narración publicada por la API para escuchar la historia.
+  StoryAsset? get audioAsset => _firstAssetOfType('audio');
+
+  StoryAsset? _firstAssetOfType(String type) {
     for (final asset in assets) {
-      if (asset.type == 'cover_image') return asset;
+      if (asset.type == type) return asset;
     }
     return null;
   }

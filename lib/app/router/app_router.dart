@@ -5,8 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_routes.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/cubit/account_cubit.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/reader/domain/repositories/reader_repository.dart';
@@ -38,6 +43,23 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.register,
+        builder: (context, state) =>
+            _accountFlow(context, const RegisterPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) =>
+            _accountFlow(context, const ForgotPasswordPage()),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) => _accountFlow(
+          context,
+          ResetPasswordPage(initialToken: state.uri.queryParameters['token']),
+        ),
       ),
       GoRoute(
         path: AppRoutes.stories,
@@ -80,17 +102,25 @@ class AppRouter {
     final status = authBloc.state.status;
     final location = state.matchedLocation;
     final isSplash = location == AppRoutes.splash;
-    final isLogin = location == AppRoutes.login;
+    final isPublic = AppRoutes.publicRoutes.contains(location);
 
     if (status == AuthStatus.initial || status == AuthStatus.checking) {
       return isSplash ? null : AppRoutes.splash;
     }
 
     if (status == AuthStatus.authenticated) {
-      return isSplash || isLogin ? AppRoutes.stories : null;
+      return isSplash || isPublic ? AppRoutes.stories : null;
     }
 
-    return isLogin ? null : AppRoutes.login;
+    return isPublic ? null : AppRoutes.login;
+  }
+
+  /// Provee el cubit de cuenta a los formularios que no abren sesión.
+  static Widget _accountFlow(BuildContext context, Widget child) {
+    return BlocProvider(
+      create: (_) => AccountCubit(context.read<AuthRepository>()),
+      child: child,
+    );
   }
 }
 

@@ -12,11 +12,18 @@ class AppSemantics {
     required String title,
     required String readingLevel,
     int? estimatedMinutes,
+    double? progressPercent,
+    bool completed = false,
   }) {
     final minutes = estimatedMinutes == null
         ? ''
         : ', duración aproximada $estimatedMinutes minutos';
-    return 'Abrir historia $title, nivel $readingLevel$minutes';
+    final progress = switch ((progressPercent, completed)) {
+      (_, true) => ', historia completada',
+      (final double percent, false) => ', avance ${percent.round()} por ciento',
+      _ => '',
+    };
+    return 'Abrir historia $title, nivel $readingLevel$minutes$progress';
   }
 
   /// Describe el botón de pronunciación de una palabra.
@@ -32,6 +39,13 @@ class AppSemantics {
   /// Describe el progreso visible del lector sin depender solo del indicador visual.
   static String readingProgress(double percent) {
     return 'Progreso de lectura ${percent.round()} por ciento';
+  }
+
+  /// Describe el avance de la narración de la historia.
+  static String narrationProgress(Duration position, Duration duration) {
+    final current = position.inMinutes;
+    final total = duration.inMinutes;
+    return 'Avance de la narración, minuto $current de $total';
   }
 
   /// Describe una palabra guardada dentro del vocabulario personal.

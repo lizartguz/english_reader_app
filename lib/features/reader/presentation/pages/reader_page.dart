@@ -5,12 +5,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/accessibility/app_semantics.dart';
 import '../../../../core/constants/app_keys.dart';
+import '../../../../core/media/story_asset_loader.dart';
+import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/app_loading_view.dart';
 import '../bloc/reader_bloc.dart';
 import '../cubit/reader_settings_cubit.dart';
 import '../widgets/reader_content.dart';
 import '../widgets/reader_settings_sheet.dart';
+import '../widgets/story_narration_bar.dart';
 import '../widgets/word_detail_sheet.dart';
 
 /// Pantalla de lectura que coordina historia, palabras y progreso.
@@ -86,6 +89,7 @@ class ReaderPage extends StatelessWidget {
             ReaderStatus.initial || ReaderStatus.loading =>
               const AppLoadingView(message: 'Abriendo lectura...'),
             ReaderStatus.error => AppErrorView(
+              title: 'No se pudo abrir la lectura',
               message: state.message ?? 'No se pudo cargar la historia.',
               onRetry: () =>
                   context.read<ReaderBloc>().add(ReaderStarted(storyId)),
@@ -200,18 +204,35 @@ class _ReaderBodyState extends State<_ReaderBody> {
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ],
+                    if (story.audioAsset != null) ...[
+                      const SizedBox(height: 20),
+                      StoryNarrationBar(
+                        asset: story.audioAsset!,
+                        loadAudio: (assetId) => context
+                            .read<StoryAssetLoader>()
+                            .load(assetId, cache: false),
+                      ),
+                    ],
                     const SizedBox(height: 28),
-                    FocusTraversalGroup(
-                      policy: ReadingOrderTraversalPolicy(),
-                      child: ReaderContent(
-                        content: story.content ?? '',
-                        fontScale: settings.fontScale,
-                        lineHeight: settings.lineHeight,
-                        onWordTap: (word) => context.read<ReaderBloc>().add(
-                          ReaderWordSelected(word),
+                    if ((story.content ?? '').trim().isEmpty)
+                      const AppEmptyState(
+                        icon: Icons.article_outlined,
+                        title: 'Historia sin contenido',
+                        message:
+                            'Esta historia aún no tiene texto publicado. Vuelve a intentarlo más tarde.',
+                      )
+                    else
+                      FocusTraversalGroup(
+                        policy: ReadingOrderTraversalPolicy(),
+                        child: ReaderContent(
+                          content: story.content!,
+                          fontScale: settings.fontScale,
+                          lineHeight: settings.lineHeight,
+                          onWordTap: (word) => context.read<ReaderBloc>().add(
+                            ReaderWordSelected(word),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

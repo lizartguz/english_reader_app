@@ -22,6 +22,15 @@ Aplicacion Flutter para usuarios cliente de Readeriz.
 - Keys estables para pruebas de login, historias, lector y vocabulario.
 - Smoke test de flujo para login, lector, lookup y vocabulario con rutas reales.
 - Verificador real de API para login, historias, lookup y vocabulario contra backend local.
+- Registro de cuenta cliente, recuperación de contraseña y definición de contraseña nueva con token.
+- Filtros locales de historias por nivel y de vocabulario por estado, con búsqueda y contador de resultados.
+- Estados vacíos y de error con título, icono y acción de recuperación en historias, lector y vocabulario.
+- Progreso de lectura visible en cada tarjeta de historia usando `GET /app/reading-progress`.
+- Narración de la historia con reproducir, pausar y barra de avance cuando la API publica audio.
+- Recursos protegidos (portada y audio) descargados con la sesión activa desde `StoryAssetLoader`.
+- Marca Readeriz en splash, barra de historias, formularios de cuenta y perfil.
+- Splash HTML de carga en `web/index.html` para evitar lienzo en blanco al abrir la Web.
+- Pruebas E2E Web reales con Playwright sobre la app renderizada (escritorio y viewport móvil).
 
 ## API local
 
@@ -56,3 +65,24 @@ dart run tool/verify_real_api_flow.dart
 flutter build web --dart-define=API_BASE_URL=http://localhost:3000/api/v1 --dart-define=APP_ENV=development
 flutter build apk --debug --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1 --dart-define=APP_ENV=development
 ```
+
+## Pruebas E2E Web
+
+Validan la app Web renderizada contra la API real: login, búsqueda y filtros de
+historias, lector, modal de palabra, guardado y filtros de vocabulario.
+
+```bash
+npm install
+npx playwright install chrome
+npm run e2e:web
+npm run e2e:web:report
+```
+
+Cada corrida compila `flutter build web` y levanta su propio servidor estático,
+por eso `reuseExistingServer` está en `false` para el servidor Web: así nunca se
+valida un bundle viejo. La API se reutiliza si ya está corriendo en el puerto
+3000.
+
+Credenciales y URL se pueden ajustar por variables de entorno:
+`E2E_CLIENT_EMAIL`, `E2E_CLIENT_PASSWORD`, `E2E_ADMIN_EMAIL`,
+`E2E_ADMIN_PASSWORD`, `API_BASE_URL` y `E2E_WEB_PORT`.

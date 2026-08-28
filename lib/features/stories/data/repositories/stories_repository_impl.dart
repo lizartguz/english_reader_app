@@ -1,5 +1,6 @@
 import '../../../../core/constants/app_messages.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../reader/domain/entities/reading_progress.dart';
 import '../../domain/entities/story.dart';
 import '../../domain/repositories/stories_repository.dart';
 import '../datasources/stories_remote_datasource.dart';
@@ -17,6 +18,15 @@ class StoriesRepositoryImpl implements StoriesRepository {
       return _remoteDataSource.listStories();
     } catch (error) {
       throw mapDioException(error, AppMessages.storiesLoadError);
+    }
+  }
+
+  @override
+  Future<List<ReadingProgress>> listReadingProgress() async {
+    try {
+      return _remoteDataSource.listReadingProgress();
+    } catch (error) {
+      throw mapDioException(error, AppMessages.progressLoadError);
     }
   }
 

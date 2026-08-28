@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_keys.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../../core/constants/app_info.dart';
 import '../bloc/auth_bloc.dart';
 
@@ -135,6 +137,15 @@ class _LoginPageState extends State<LoginPage> {
                             label: const Text('Iniciar sesión'),
                           );
                         },
+                      ),
+                      const SizedBox(height: 4),
+                      TextButton(
+                        onPressed: () => context.go(AppRoutes.forgotPassword),
+                        child: const Text('Olvidé mi contraseña'),
+                      ),
+                      TextButton(
+                        onPressed: () => context.go(AppRoutes.register),
+                        child: const Text('Crear cuenta nueva'),
                       ),
                     ],
                   ),

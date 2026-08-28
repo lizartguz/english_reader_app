@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_info.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../../core/layout/responsive_breakpoints.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
@@ -14,7 +17,14 @@ class ProfilePage extends StatelessWidget {
     final user = context.select((AuthBloc bloc) => bloc.state.user);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil')),
+      appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'Volver a historias',
+          onPressed: () => context.go(AppRoutes.home),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: const Text('Perfil'),
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -53,6 +63,10 @@ class ProfilePage extends StatelessWidget {
                       icon: const Icon(Icons.logout),
                       label: const Text('Cerrar sesión'),
                     ),
+                    const SizedBox(height: 32),
+                    const Divider(),
+                    const SizedBox(height: 16),
+                    const _BrandFooter(),
                   ],
                 ),
               ),
@@ -60,6 +74,43 @@ class ProfilePage extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Cierra el perfil recordando la marca de la aplicación.
+class _BrandFooter extends StatelessWidget {
+  const _BrandFooter();
+
+  /// Muestra logo, nombre y propósito del producto en un bloque discreto.
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Image.asset(
+          AppInfo.logoAsset,
+          height: 36,
+          semanticLabel: '${AppInfo.displayName} logo',
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppInfo.displayName,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                AppInfo.description,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

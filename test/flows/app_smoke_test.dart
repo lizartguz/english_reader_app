@@ -147,6 +147,24 @@ class _FakeAuthRepository implements AuthRepository {
     _hasSession = false;
   }
 
+  @override
+  Future<String> register({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    String? phone,
+  }) async => 'Cuenta creada.';
+
+  @override
+  Future<String> requestPasswordReset(String email) async => 'Correo enviado.';
+
+  @override
+  Future<String> resetPassword({
+    required String token,
+    required String password,
+  }) async => 'Contrasena actualizada.';
+
   /// Devuelve el usuario cuando el test ya inició sesión.
   @override
   Future<AuthUser?> verifySession() async => _hasSession ? _user : null;
@@ -161,6 +179,13 @@ class _FakeStoriesRepository implements StoriesRepository {
   /// Devuelve una lista con una historia publicada.
   @override
   Future<List<Story>> listStories() async => const [_story];
+
+  /// Expone el avance guardado para pintar progreso en el listado.
+  @override
+  Future<List<ReadingProgress>> listReadingProgress() async {
+    final progress = _store.progress;
+    return progress == null ? const [] : [progress];
+  }
 
   /// Devuelve la historia solicitada y registra que fue usada por el flujo.
   @override

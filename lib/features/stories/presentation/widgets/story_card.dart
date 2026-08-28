@@ -1,15 +1,22 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/accessibility/app_semantics.dart';
+import '../../../reader/domain/entities/reading_progress.dart';
 import '../../domain/entities/story.dart';
+import 'story_cover_image.dart';
 
 /// Tarjeta resumida de una historia publicada.
 class StoryCard extends StatelessWidget {
-  const StoryCard({required this.story, required this.onTap, super.key});
+  const StoryCard({
+    required this.story,
+    required this.onTap,
+    this.progress,
+    super.key,
+  });
 
   final Story story;
   final VoidCallback onTap;
+  final ReadingProgress? progress;
 
   /// Construye una tarjeta estable para listas móviles y grids Web.
   @override
@@ -24,6 +31,8 @@ class StoryCard extends StatelessWidget {
         title: story.title,
         readingLevel: story.readingLevel.name,
         estimatedMinutes: story.estimatedReadingMinutes,
+        progressPercent: progress?.progressPercent,
+        completed: progress?.completedAt != null,
       ),
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -35,17 +44,7 @@ class StoryCard extends StatelessWidget {
               children: [
                 AspectRatio(
                   aspectRatio: 16 / 7,
-                  child: cover == null || cover.downloadUrl.isEmpty
-                      ? ColoredBox(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          child: const Icon(Icons.auto_stories, size: 42),
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: cover.downloadUrl,
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) =>
-                              const Icon(Icons.broken_image_outlined),
-                        ),
+                  child: StoryCoverImage(cover: cover),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -93,6 +92,10 @@ class StoryCard extends StatelessWidget {
                           if (hiddenGenreCount > 0) Text('+$hiddenGenreCount'),
                         ],
                       ),
+                      if (progress != null) ...[
+                        const SizedBox(height: 12),
+                        _StoryProgress(progress: progress!),
+                      ],
                     ],
                   ),
                 ),
@@ -101,6 +104,46 @@ class StoryCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Indicador de avance de lectura mostrado dentro de la tarjeta.
+class _StoryProgress extends StatelessWidget {
+  const _StoryProgress({required this.progress});
+
+  final ReadingProgress progress;
+
+  /// Muestra el avance guardado o el estado completado de la historia.
+  @override
+  Widget build(BuildContext context) {
+    final completed = progress.completedAt != null;
+    final percent = progress.progressPercent.clamp(0, 100).toDouble();
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              completed ? Icons.check_circle : Icons.play_circle_outline,
+              size: 18,
+              color: completed ? theme.colorScheme.primary : theme.hintColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              completed ? 'Completada' : 'Continuar · ${percent.round()}%',
+              style: theme.textTheme.labelLarge,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(value: percent / 100, minHeight: 5),
+        ),
+      ],
     );
   }
 }

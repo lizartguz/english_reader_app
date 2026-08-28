@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppErrorView extends StatelessWidget {
-  const AppErrorView({required this.message, this.onRetry, super.key});
+  const AppErrorView({
+    required this.message,
+    this.title = 'No pudimos cargar esta información',
+    this.onRetry,
+    super.key,
+  });
 
+  final String title;
   final String message;
   final VoidCallback? onRetry;
 
+  /// Muestra errores recuperables con un mensaje claro y una acción de reintento.
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -22,6 +29,12 @@ class AppErrorView extends StatelessWidget {
                 color: Theme.of(context).colorScheme.error,
               ),
               const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 6),
               Text(message, textAlign: TextAlign.center),
               if (onRetry != null) ...[
                 const SizedBox(height: 16),

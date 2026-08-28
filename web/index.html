@@ -31,8 +31,80 @@
 
   <title>Readeriz</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    body {
+      margin: 0;
+      background-color: #F7F8F4;
+    }
+
+    #readeriz-loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background-color: #F7F8F4;
+      color: #172326;
+      font-family: Roboto, "Segoe UI", system-ui, sans-serif;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .readeriz-loading__name {
+      margin: 12px 0 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .readeriz-loading__hint {
+      margin: 0;
+      font-size: 14px;
+      color: #4A5A5E;
+    }
+
+    .readeriz-loading__bar {
+      margin-top: 20px;
+      width: 168px;
+      height: 4px;
+      border-radius: 999px;
+      background-color: #DDE3E0;
+      overflow: hidden;
+    }
+
+    .readeriz-loading__bar span {
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 999px;
+      background-color: #215C6B;
+      animation: readeriz-loading-slide 1.2s ease-in-out infinite;
+    }
+
+    @keyframes readeriz-loading-slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .readeriz-loading__bar span {
+        animation: none;
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <!-- Pantalla de carga con la marca para evitar un lienzo en blanco al arrancar. -->
+  <div id="readeriz-loading" role="status" aria-live="polite">
+    <img src="icons/Icon-192.png" alt="Readeriz" width="88" height="88" />
+    <p class="readeriz-loading__name">Readeriz</p>
+    <p class="readeriz-loading__hint">Preparando tu lectura...</p>
+    <div class="readeriz-loading__bar"><span></span></div>
+  </div>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +114,12 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    // Retira el splash en cuanto Flutter pinta su primera vista.
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('readeriz-loading');
+      if (splash) splash.remove();
+    });
+  </script>
 </body>
 </html>

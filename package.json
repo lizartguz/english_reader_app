@@ -1,0 +1,16 @@
+{
+  "name": "readeriz-flutter-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Validaciones E2E Web para Readeriz.",
+  "scripts": {
+    "e2e:web": "playwright test",
+    "e2e:web:headed": "playwright test --headed",
+    "e2e:web:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "http-server": "^14.1.1",
+    "pngjs": "^7.0.0"
+  }
+}

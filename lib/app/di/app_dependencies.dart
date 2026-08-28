@@ -1,3 +1,4 @@
+import '../../core/media/story_asset_loader.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/device_identity_service.dart';
 import '../../core/storage/preferences_service.dart';
@@ -24,6 +25,7 @@ class AppDependencies {
     required this.preferences,
     required this.deviceIdentity,
     required this.apiClient,
+    required this.storyAssetLoader,
     required this.authRepository,
     required this.storiesRepository,
     required this.readerRepository,
@@ -35,6 +37,7 @@ class AppDependencies {
   final PreferencesService preferences;
   final DeviceIdentityService deviceIdentity;
   final ApiClient apiClient;
+  final StoryAssetLoader storyAssetLoader;
   final AuthRepository authRepository;
   final StoriesRepository storiesRepository;
   final ReaderRepository readerRepository;
@@ -54,6 +57,7 @@ class AppDependencies {
       deviceIdentity: deviceIdentity,
     );
 
+    final storyAssetLoader = StoryAssetLoader(apiClient);
     final authRepository = AuthRepositoryImpl(
       remoteDataSource: AuthRemoteDataSource(apiClient),
       secureStorage: secureStorage,
@@ -76,6 +80,7 @@ class AppDependencies {
       preferences: preferences,
       deviceIdentity: deviceIdentity,
       apiClient: apiClient,
+      storyAssetLoader: storyAssetLoader,
       authRepository: authRepository,
       storiesRepository: storiesRepository,
       readerRepository: readerRepository,

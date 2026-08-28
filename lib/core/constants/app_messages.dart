@@ -19,8 +19,13 @@ class AppMessages {
       'Revisa los datos enviados e intentalo nuevamente.';
   static const genericError =
       'No se pudo completar la accion. Intentalo nuevamente.';
+  static const registerError = 'No se pudo crear la cuenta.';
+  static const passwordResetError =
+      'No se pudo completar la recuperación de contraseña.';
   static const storiesLoadError = 'No se pudieron cargar las historias.';
   static const storyLoadError = 'No se pudo cargar la historia.';
+  static const progressLoadError = 'No se pudo cargar tu progreso de lectura.';
   static const wordLookupError = 'No se pudo consultar la palabra.';
+  static const assetLoadError = 'No se pudo cargar el recurso de la historia.';
   static const vocabularySaved = 'Palabra guardada correctamente.';
 }

@@ -9,9 +9,43 @@ class AppKeys {
   static const loginTogglePassword = ValueKey<String>('login.password.toggle');
   static const loginSubmitButton = ValueKey<String>('login.submit.button');
 
+  static const registerFirstNameField = ValueKey<String>(
+    'register.firstName.field',
+  );
+  static const registerLastNameField = ValueKey<String>(
+    'register.lastName.field',
+  );
+  static const registerEmailField = ValueKey<String>('register.email.field');
+  static const registerPhoneField = ValueKey<String>('register.phone.field');
+  static const registerPasswordField = ValueKey<String>(
+    'register.password.field',
+  );
+  static const registerSubmitButton = ValueKey<String>(
+    'register.submit.button',
+  );
+  static const forgotPasswordEmailField = ValueKey<String>(
+    'forgotPassword.email.field',
+  );
+  static const forgotPasswordSubmitButton = ValueKey<String>(
+    'forgotPassword.submit.button',
+  );
+  static const resetPasswordTokenField = ValueKey<String>(
+    'resetPassword.token.field',
+  );
+  static const resetPasswordField = ValueKey<String>(
+    'resetPassword.password.field',
+  );
+  static const resetPasswordSubmitButton = ValueKey<String>(
+    'resetPassword.submit.button',
+  );
+
   static const storiesList = ValueKey<String>('stories.list');
+  static const storiesSearchField = ValueKey<String>('stories.search.field');
   static const readerContent = ValueKey<String>('reader.content');
   static const readerScroll = ValueKey<String>('reader.scroll');
+  static const readerNarrationButton = ValueKey<String>(
+    'reader.narration.button',
+  );
   static const readerSettingsButton = ValueKey<String>(
     'reader.settings.button',
   );
@@ -27,6 +61,9 @@ class AppKeys {
     'word.pronunciation.button',
   );
   static const vocabularyList = ValueKey<String>('vocabulary.list');
+  static const vocabularySearchField = ValueKey<String>(
+    'vocabulary.search.field',
+  );
   static const vocabularyNotesField = ValueKey<String>(
     'vocabulary.notes.field',
   );

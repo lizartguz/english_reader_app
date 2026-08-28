@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
@@ -53,6 +54,15 @@ class ApiClient {
       queryParameters: queryParameters,
     );
     return ApiPayload<T>.fromJson(response.data);
+  }
+
+  /// Descarga un recurso binario protegido reutilizando la sesión activa.
+  Future<Uint8List> getBytes(String path) async {
+    final response = await _dio.get<List<int>>(
+      path,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return Uint8List.fromList(response.data ?? const []);
   }
 
   /// Ejecuta una solicitud POST y normaliza la respuesta estándar de la API.

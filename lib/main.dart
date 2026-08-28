@@ -24,6 +24,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         Provider<AppDependencies>.value(value: dependencies),
+        Provider.value(value: dependencies.storyAssetLoader),
         Provider.value(value: dependencies.authRepository),
         Provider.value(value: dependencies.storiesRepository),
         Provider.value(value: dependencies.readerRepository),

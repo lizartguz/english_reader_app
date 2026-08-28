@@ -1,4 +1,5 @@
 import 'package:english_reader_app/core/constants/app_keys.dart';
+import 'package:english_reader_app/features/reader/domain/entities/reading_progress.dart';
 import 'package:english_reader_app/features/stories/domain/entities/story.dart';
 import 'package:english_reader_app/features/stories/domain/repositories/stories_repository.dart';
 import 'package:english_reader_app/features/stories/presentation/bloc/stories_bloc.dart';
@@ -62,6 +63,9 @@ class _TestApp extends StatelessWidget {
 class _FakeStoriesRepository implements StoriesRepository {
   @override
   Future<List<Story>> listStories() async => const [_story];
+
+  @override
+  Future<List<ReadingProgress>> listReadingProgress() async => const [];
 
   @override
   Future<Story> getStory(String id) async => _story;

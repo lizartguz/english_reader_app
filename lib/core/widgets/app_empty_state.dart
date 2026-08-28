@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppEmptyState extends StatelessWidget {
-  const AppEmptyState({required this.title, required this.message, super.key});
+  const AppEmptyState({
+    required this.title,
+    required this.message,
+    this.icon = Icons.menu_book_outlined,
+    this.action,
+    super.key,
+  });
 
   final String title;
   final String message;
+  final IconData icon;
+  final Widget? action;
 
+  /// Presenta estados sin datos con una acción opcional de recuperación.
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -17,7 +26,7 @@ class AppEmptyState extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.menu_book_outlined,
+                icon,
                 size: 44,
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -29,6 +38,7 @@ class AppEmptyState extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
+              if (action != null) ...[const SizedBox(height: 16), action!],
             ],
           ),
         ),
