@@ -89,6 +89,13 @@ Gradle valida la presencia de `storeFile`, `storePassword`, `keyAlias` y
 `assembleRelease`, `bundleRelease` o tareas release equivalentes. Las builds
 debug no requieren este archivo.
 
+## Permisos Android
+
+El manifest principal declara `android.permission.INTERNET` porque Readeriz
+consume la API en debug, profile y release. La variante release debe conservar
+este permiso para login, historias, lector, audio, vocabulario y sincronizacion
+de progreso.
+
 iOS:
 
 ```bash
