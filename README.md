@@ -23,7 +23,7 @@ Aplicacion Flutter para usuarios cliente de Readeriz.
 - Smoke test de flujo para login, lector, lookup y vocabulario con rutas reales.
 - Verificador real de API para login, historias, lookup y vocabulario contra backend local.
 - Registro de cuenta cliente, recuperación de contraseña y definición de contraseña nueva con token.
-- Filtros locales de historias por nivel y de vocabulario por estado, con búsqueda y contador de resultados.
+- Búsqueda local de historias y vocabulario, incluyendo nivel, género, traducción, notas y estado.
 - Estados vacíos y de error con título, icono y acción de recuperación en historias, lector y vocabulario.
 - Progreso de lectura visible en cada tarjeta de historia usando `GET /app/reading-progress`.
 - Narración de la historia con reproducir, pausar y barra de avance cuando la API publica audio.
@@ -62,6 +62,7 @@ flutter analyze
 flutter test
 flutter test test/flows/app_smoke_test.dart
 dart run tool/verify_real_api_flow.dart
+npm run e2e:web
 flutter build web --dart-define=API_BASE_URL=http://localhost:3000/api/v1 --dart-define=APP_ENV=development
 flutter build apk --debug --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1 --dart-define=APP_ENV=development
 ```

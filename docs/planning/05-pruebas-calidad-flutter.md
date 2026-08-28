@@ -104,25 +104,36 @@ Cobertura actual:
 
 ## E2E Web con API real
 
-Se usará Playwright contra Chrome para validar flujos principales en Flutter Web
-cuando la API local esté disponible. En este SDK, `integration_test` no ejecuta
-tests Web con `flutter test -d chrome`, por lo que el smoke vigente vive en
-`test/flows`.
+La suite Playwright vigente valida Chrome sobre Flutter Web renderizado contra
+`english_reader_api` real. En este SDK, `integration_test` no ejecuta tests Web
+con `flutter test -d chrome`, por lo que se mantiene un smoke de widgets en
+`test/flows` y el E2E visual vive en `e2e/`.
 
 Referencia: https://playwright.dev/
 
-Flujos prioritarios:
+Flujos implementados:
 
-- login cliente
-- listado de historias
+- login cliente desde la UI real
+- listado de historias con búsqueda visible
 - apertura de historia
-- reproducción o pausa
-- toque/clic en palabra
+- toque/clic en palabra desde el lector
 - visualización de modal de significado
-- pronunciación disponible
-- guardar palabra
-- sincronizar progreso
-- sesión expirada
+- guardado idempotente de palabra
+- navegación y render de vocabulario
+- verificación visual anti-lienzo blanco en escritorio y viewport móvil
+
+Antes del flujo visual, el test asegura por API admin la palabra `umbrella` en
+el diccionario local. Si ya existe, continúa con `409` esperado; así no depende
+de proveedores externos de diccionario o traducción.
+
+Comandos vigentes:
+
+```bash
+npm install
+npx playwright install chrome
+npm run e2e:web
+npm run e2e:web:report
+```
 
 ## Integración con API
 
@@ -138,6 +149,12 @@ El smoke real vigente se ejecuta con:
 
 ```bash
 dart run tool/verify_real_api_flow.dart
+```
+
+La validación visual Web vigente se ejecuta con:
+
+```bash
+npm run e2e:web
 ```
 
 ## Criterios de cierre

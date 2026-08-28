@@ -24,7 +24,9 @@ La selección toma como referencia `D:\projects\dentasync_app`, pero se adapta a
 | Pruebas | `flutter_test` | Base |
 | Lints | `flutter_lints` | Recomendado |
 | Launcher icons | `flutter_launcher_icons` | Aprobado |
-| E2E Web | Playwright externo | Aprobado |
+| E2E Web | `@playwright/test` | Aprobado |
+| Servidor estático E2E | `http-server` | Aprobado |
+| Verificación visual E2E | `pngjs` | Aprobado |
 
 ## Referencia tomada de DentaSync
 
@@ -158,6 +160,25 @@ dart run flutter_launcher_icons
 ```
 
 Referencia: https://pub.dev/packages/flutter_launcher_icons
+
+## Playwright Web E2E
+
+`@playwright/test` se usa fuera de Flutter para abrir Chrome contra la build Web
+real. La configuración compila `flutter build web --no-web-resources-cdn`,
+levanta `http-server` en `localhost:53633` y valida escritorio más viewport
+móvil.
+
+`pngjs` inspecciona capturas para evitar falsos positivos cuando el canvas queda
+blanco. La API se levanta desde el proyecto `english_reader_api` y se reutiliza
+si ya responde en `http://localhost:3000/api/v1/health`.
+
+Comandos:
+
+```bash
+npm install
+npx playwright install chrome
+npm run e2e:web
+```
 
 ## Cached Network Image
 

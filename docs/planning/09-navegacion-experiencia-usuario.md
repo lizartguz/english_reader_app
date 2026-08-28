@@ -103,6 +103,11 @@ No se pudo conectar con el servidor. Inténtalo nuevamente en unos minutos.
 
 No mostrar stack traces, errores crudos de red ni detalles técnicos.
 
+Los estados de error vigentes usan un componente reutilizable con título,
+mensaje y acción de reintento cuando la pantalla puede recuperarse localmente.
+Los estados vacíos de historias y vocabulario incluyen icono y acción de
+actualización para evitar pantallas muertas.
+
 ## No autorizado
 
 Si la API indica falta de autorización:
@@ -120,6 +125,31 @@ foco.
 El indicador de progreso del lector expone una etiqueta semántica con el
 porcentaje visible. Las filas de vocabulario exponen palabra, traducción y
 estado, y el menú de acciones usa un tooltip específico por palabra.
+
+Las pantallas de historias y vocabulario exponen campos de búsqueda con labels
+semánticos (`Buscar historias`, `Buscar vocabulario`) para que Playwright y
+lectores de pantalla puedan validar el flujo real.
+
+## Búsqueda y filtros
+
+Las búsquedas de historias y vocabulario se realizan en memoria sobre el lote
+cargado desde la API para responder de inmediato sin tráfico adicional.
+
+Historias filtra por:
+
+- título
+- resumen
+- autor
+- nivel
+- géneros
+
+Vocabulario filtra por:
+
+- palabra
+- traducción
+- historia asociada
+- nota
+- estado visible
 
 ## Responsive
 
