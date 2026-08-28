@@ -54,6 +54,18 @@ flutter run \
   --dart-define=APP_ENV=development
 ```
 
+Para `staging` y `production`, `API_BASE_URL` es obligatorio, debe usar HTTPS y
+no puede apuntar a hosts locales:
+
+```bash
+flutter build apk --release \
+  --dart-define=API_BASE_URL=https://api.readeriz.com/api/v1 \
+  --dart-define=APP_ENV=production
+```
+
+Guía completa de comandos por ambiente:
+[`docs/guia-ejecucion-ambientes-flutter.md`](docs/guia-ejecucion-ambientes-flutter.md).
+
 ## Validacion
 
 ```bash

@@ -35,6 +35,19 @@ API_BASE_URL
 APP_ENV
 ```
 
+Reglas vigentes:
+
+- `development` puede usar URLs locales por defecto para Web, Android emulator y escritorio.
+- `staging` y `production` requieren `API_BASE_URL` explícita por `--dart-define`.
+- `staging` y `production` requieren HTTPS.
+- `staging` y `production` rechazan hosts locales como `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` y `10.0.2.2`.
+
+Ejemplo productivo:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=https://api.readeriz.com/api/v1 --dart-define=APP_ENV=production
+```
+
 No se deben hardcodear URLs de producción en el código.
 
 ## Builds conceptuales

@@ -15,6 +15,10 @@ API_BASE_URL
 APP_ENV
 ```
 
+`APP_ENV=development` puede usar la URL local por defecto. Los ambientes
+`staging` y `production` deben recibir `API_BASE_URL` de forma explícita,
+siempre con HTTPS y sin hosts locales.
+
 ## Autenticación
 
 Flutter debe autenticarse contra la API.
