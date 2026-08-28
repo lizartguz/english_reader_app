@@ -46,6 +46,49 @@ flutter build apk
 flutter build appbundle
 ```
 
+## Firma Android release
+
+La variante `release` de Android debe firmarse con una llave real del proyecto.
+No se permite firmar `release` con la llave debug.
+
+El archivo local de credenciales debe llamarse:
+
+```text
+android/key.properties
+```
+
+Ese archivo no debe versionarse. La plantilla versionada queda en:
+
+```text
+android/key.properties.example
+```
+
+Contenido esperado:
+
+```properties
+storeFile=../upload-keystore.jks
+storePassword=REEMPLAZAR_CON_PASSWORD_DEL_KEYSTORE
+keyAlias=readeriz
+keyPassword=REEMPLAZAR_CON_PASSWORD_DE_LA_LLAVE
+```
+
+La ruta `storeFile=../upload-keystore.jks` apunta a:
+
+```text
+android/upload-keystore.jks
+```
+
+Para generar una llave local de release se puede usar:
+
+```bash
+keytool -genkey -v -keystore android/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias readeriz
+```
+
+Gradle valida la presencia de `storeFile`, `storePassword`, `keyAlias` y
+`keyPassword`, ademas de la existencia fisica del `.jks`, antes de compilar
+`assembleRelease`, `bundleRelease` o tareas release equivalentes. Las builds
+debug no requieren este archivo.
+
 iOS:
 
 ```bash

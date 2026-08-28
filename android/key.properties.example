@@ -1,0 +1,4 @@
+storeFile=../upload-keystore.jks
+storePassword=REEMPLAZAR_CON_PASSWORD_DEL_KEYSTORE
+keyAlias=readeriz
+keyPassword=REEMPLAZAR_CON_PASSWORD_DE_LA_LLAVE
