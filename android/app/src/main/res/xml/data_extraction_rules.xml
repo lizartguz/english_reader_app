@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Readeriz no participa en la extraccion automatica de datos de Android.
+
+  Motivo: el `device_id` identifica la instalacion y la API lo usa para aplicar
+  un dispositivo activo por usuario cliente. Si se copiara a otro telefono, dos
+  aparatos afirmarian ser el mismo y esa politica dejaria de cumplirse sin
+  ningun sintoma visible. Los tokens tampoco ganan nada: viajan cifrados, pero
+  la llave vive en el Android Keystore y no se copia, asi que al restaurar
+  quedarian ilegibles.
+
+  Por que hace falta este archivo si ya existe `android:allowBackup="false"`:
+  Android distingue dos destinos, y el sistema lee la seccion que corresponde a
+  cada uno (`FullBackup.getConfigSectionForBackupDestination`):
+
+    BackupDestination.CLOUD           -> <cloud-backup>
+    BackupDestination.DEVICE_TRANSFER -> <device-transfer>
+
+  `allowBackup` es un booleano heredado de cuando solo existia la copia a la
+  nube. La transferencia directa entre dispositivos es un camino aparte, al
+  punto de que desde Android 12 el sistema ignora a proposito la configuracion
+  antigua `fullBackupContent` durante un D2D (ver el cambio de compatibilidad
+  IGNORE_FULL_BACKUP_CONTENT_IN_D2D). Sin la seccion <device-transfer>, el
+  `device_id` seguiria viajando al telefono nuevo al migrar.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+        <exclude domain="external" />
+        <exclude domain="root" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" />
+        <exclude domain="database" />
+        <exclude domain="file" />
+        <exclude domain="external" />
+        <exclude domain="root" />
+    </device-transfer>
+</data-extraction-rules>
