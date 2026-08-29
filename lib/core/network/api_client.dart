@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../app/config/app_config.dart';
 import '../auth/auth_session_transport.dart';
@@ -19,21 +19,24 @@ class ApiClient implements SessionRestorer {
     required AuthSessionTransport authSessionTransport,
     required SessionTokenStore tokenStore,
     required DeviceIdentityService deviceIdentity,
+    @visibleForTesting Dio? dio,
   }) : _config = config,
        _authSessionTransport = authSessionTransport,
        _tokenStore = tokenStore,
        _deviceIdentity = deviceIdentity,
-       _dio = Dio(
-         BaseOptions(
-           baseUrl: config.apiBaseUrl,
-           connectTimeout: const Duration(seconds: 15),
-           receiveTimeout: const Duration(seconds: 20),
-           headers: const {
-             'Accept': 'application/json',
-             'Content-Type': 'application/json',
-           },
-         ),
-       ) {
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: config.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 15),
+               receiveTimeout: const Duration(seconds: 20),
+               headers: const {
+                 'Accept': 'application/json',
+                 'Content-Type': 'application/json',
+               },
+             ),
+           ) {
     _dio.interceptors.add(
       InterceptorsWrapper(onRequest: _attachToken, onError: _handleError),
     );
@@ -46,7 +49,7 @@ class ApiClient implements SessionRestorer {
   final DeviceIdentityService _deviceIdentity;
   final StreamController<AppException> _sessionIssues =
       StreamController<AppException>.broadcast();
-  bool _refreshing = false;
+  Future<bool>? _refreshFuture;
 
   /// Emite eventos cuando la API indica que la sesión local ya no sirve.
   Stream<AppException> get sessionIssues => _sessionIssues.stream;
@@ -134,7 +137,17 @@ class ApiClient implements SessionRestorer {
         !_isAuthRefreshRequest(error.requestOptions) &&
         error.requestOptions.extra['retried'] != true;
 
-    if (canRefresh && await _refreshSession()) {
+    // Una petición enviada antes de la renovación puede llegar al servidor
+    // después de ella: su 401 ya está resuelto y basta reintentarla con el token
+    // vigente, sin rotar otra vez el refresh token.
+    final tokenEnviado = error.requestOptions.headers['Authorization'];
+    final tokenVigente = await _tokenStore.readAccessToken();
+    final yaRenovado =
+        tokenEnviado != null &&
+        tokenVigente != null &&
+        tokenEnviado != 'Bearer $tokenVigente';
+
+    if (canRefresh && (yaRenovado || await _refreshSession())) {
       final retryOptions = error.requestOptions;
       retryOptions.extra['retried'] = true;
       final token = await _tokenStore.readAccessToken();
@@ -159,17 +172,27 @@ class ApiClient implements SessionRestorer {
     handler.reject(error);
   }
 
-  /// Rota el refresh token usando el mismo `device_id` de la instalación.
-  Future<bool> _refreshSession() async {
-    if (_refreshing) return false;
+  /// Renueva la sesión una sola vez aunque varias peticiones fallen a la vez.
+  ///
+  /// Con una bandera booleana, la segunda petición que recibía 401 obtenía
+  /// `false` de inmediato y terminaba cerrando la sesión, aunque la renovación
+  /// en curso fuese a tener éxito. Compartir el mismo futuro evita ese cierre
+  /// falso y, sobre todo, evita dos renovaciones simultáneas: usarían el mismo
+  /// refresh token y la API lo trata como reutilización, revocando la sesión.
+  Future<bool> _refreshSession() {
+    return _refreshFuture ??= _performRefresh().whenComplete(() {
+      _refreshFuture = null;
+    });
+  }
 
+  /// Rota el refresh token usando el mismo `device_id` de la instalación.
+  Future<bool> _performRefresh() async {
     final refreshToken = await _tokenStore.readRefreshToken();
     final usesCookieRefresh = _authSessionTransport.usesCookieRefresh;
     if (!usesCookieRefresh && (refreshToken == null || refreshToken.isEmpty)) {
       return false;
     }
 
-    _refreshing = true;
     try {
       final response = await _dio.post<dynamic>(
         '/auth/refresh',
@@ -199,8 +222,6 @@ class ApiClient implements SessionRestorer {
       return true;
     } catch (_) {
       return false;
-    } finally {
-      _refreshing = false;
     }
   }
 
