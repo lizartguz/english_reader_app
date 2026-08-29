@@ -15,7 +15,7 @@ class StoriesRepositoryImpl implements StoriesRepository {
   @override
   Future<List<Story>> listStories() async {
     try {
-      return _remoteDataSource.listStories();
+      return await _remoteDataSource.listStories();
     } catch (error) {
       throw mapDioException(error, AppMessages.storiesLoadError);
     }
@@ -24,7 +24,7 @@ class StoriesRepositoryImpl implements StoriesRepository {
   @override
   Future<List<ReadingProgress>> listReadingProgress() async {
     try {
-      return _remoteDataSource.listReadingProgress();
+      return await _remoteDataSource.listReadingProgress();
     } catch (error) {
       throw mapDioException(error, AppMessages.progressLoadError);
     }
@@ -33,7 +33,7 @@ class StoriesRepositoryImpl implements StoriesRepository {
   @override
   Future<Story> getStory(String id) async {
     try {
-      return _remoteDataSource.getStory(id);
+      return await _remoteDataSource.getStory(id);
     } catch (error) {
       throw mapDioException(error, AppMessages.storyLoadError);
     }

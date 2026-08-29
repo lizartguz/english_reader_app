@@ -34,7 +34,7 @@ class StoryAssetLoader implements SessionScopedCache {
 
   Future<Uint8List> _download(String assetId, {required bool cache}) async {
     try {
-      final bytes = await _apiClient.getBytes('/files/story-assets/$assetId');
+      final bytes = await _apiClient.getBytes('/files/story-assets/${Uri.encodeComponent(assetId)}');
       if (cache) _cache[assetId] = bytes;
       return bytes;
     } catch (error) {

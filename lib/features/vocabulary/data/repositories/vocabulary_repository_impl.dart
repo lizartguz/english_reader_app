@@ -15,7 +15,7 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
   @override
   Future<List<VocabularyEntry>> listVocabulary() async {
     try {
-      return _remoteDataSource.listVocabulary();
+      return await _remoteDataSource.listVocabulary();
     } catch (error) {
       throw mapDioException(error, 'No se pudo cargar el vocabulario.');
     }
@@ -29,7 +29,7 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
     String? notes,
   }) async {
     try {
-      return _remoteDataSource.updateVocabulary(
+      return await _remoteDataSource.updateVocabulary(
         id: id,
         status: status,
         notes: notes,

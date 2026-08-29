@@ -10,7 +10,7 @@ class ReaderRemoteDataSource {
 
   Future<StoryModel> getStory(String storyId) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      '/app/stories/$storyId',
+      '/app/stories/${Uri.encodeComponent(storyId)}',
     );
     return StoryModel.fromJson(response.data!);
   }
@@ -37,7 +37,7 @@ class ReaderRemoteDataSource {
 
   Future<ReadingProgressModel?> getProgress(String storyId) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      '/app/reading-progress/$storyId',
+      '/app/reading-progress/${Uri.encodeComponent(storyId)}',
     );
     if (response.data == null) return null;
     return ReadingProgressModel.fromJson(response.data!);
@@ -50,7 +50,7 @@ class ReaderRemoteDataSource {
     bool? completed,
   }) async {
     final response = await _apiClient.patch<Map<String, dynamic>>(
-      '/app/reading-progress/$storyId',
+      '/app/reading-progress/${Uri.encodeComponent(storyId)}',
       data: {
         'progressPercent': progressPercent,
         if (lastPosition != null) 'lastPosition': lastPosition,

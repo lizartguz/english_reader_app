@@ -31,7 +31,7 @@ class StoriesRemoteDataSource {
 
   Future<StoryModel> getStory(String id) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      '/app/stories/$id',
+      '/app/stories/${Uri.encodeComponent(id)}',
     );
     return StoryModel.fromJson(response.data!);
   }

@@ -120,7 +120,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     try {
-      return _remoteDataSource.verifySession();
+      return await _remoteDataSource.verifySession();
     } catch (error) {
       final exception = mapDioException(error, AppMessages.sessionExpired);
       await clearSession();

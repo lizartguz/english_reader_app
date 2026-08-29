@@ -31,7 +31,7 @@ class VocabularyRemoteDataSource {
     String? notes,
   }) async {
     final response = await _apiClient.patch<Map<String, dynamic>>(
-      '/app/vocabulary/$id',
+      '/app/vocabulary/${Uri.encodeComponent(id)}',
       data: {
         if (status != null) 'status': status,
         if (notes != null) 'notes': notes,
@@ -43,6 +43,8 @@ class VocabularyRemoteDataSource {
 
   /// Elimina el registro guardado sin borrar la palabra del diccionario.
   Future<void> deleteVocabulary(String id) async {
-    await _apiClient.delete<Map<String, dynamic>>('/app/vocabulary/$id');
+    await _apiClient.delete<Map<String, dynamic>>(
+      '/app/vocabulary/${Uri.encodeComponent(id)}',
+    );
   }
 }

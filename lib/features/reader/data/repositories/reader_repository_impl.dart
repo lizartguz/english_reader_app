@@ -15,7 +15,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
   @override
   Future<Story> getStory(String storyId) async {
     try {
-      return _remoteDataSource.getStory(storyId);
+      return await _remoteDataSource.getStory(storyId);
     } catch (error) {
       throw mapDioException(error, AppMessages.storyLoadError);
     }
@@ -24,7 +24,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
   @override
   Future<WordDetail> lookupWord(String word) async {
     try {
-      return _remoteDataSource.lookupWord(word);
+      return await _remoteDataSource.lookupWord(word);
     } catch (error) {
       throw mapDioException(error, AppMessages.wordLookupError);
     }
@@ -36,7 +36,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
     required String storyId,
   }) async {
     try {
-      return _remoteDataSource.saveVocabulary(
+      return await _remoteDataSource.saveVocabulary(
         wordEntryId: wordEntryId,
         storyId: storyId,
       );
@@ -45,10 +45,16 @@ class ReaderRepositoryImpl implements ReaderRepository {
     }
   }
 
+  /// Devuelve el avance guardado, o `null` si el lector nunca abrió la historia.
+  ///
+  /// El `await` es imprescindible: sin él se devuelve el futuro antes de que
+  /// falle y el `catch` nunca llega a ejecutarse, de modo que el 404 normal de
+  /// "todavía no hay avance" se propagaba y el lector mostraba un error al
+  /// abrir cualquier historia por primera vez.
   @override
   Future<ReadingProgress?> getProgress(String storyId) async {
     try {
-      return _remoteDataSource.getProgress(storyId);
+      return await _remoteDataSource.getProgress(storyId);
     } catch (_) {
       return null;
     }
@@ -62,7 +68,7 @@ class ReaderRepositoryImpl implements ReaderRepository {
     bool? completed,
   }) async {
     try {
-      return _remoteDataSource.saveProgress(
+      return await _remoteDataSource.saveProgress(
         storyId: storyId,
         progressPercent: progressPercent,
         lastPosition: lastPosition,

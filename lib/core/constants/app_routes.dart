@@ -12,7 +12,13 @@ class AppRoutes {
   static const vocabulary = '/vocabulary';
   static const profile = '/profile';
 
-  static String readerPath(String storyId) => '/reader/$storyId';
+  /// Ruta del lector para una historia.
+  ///
+  /// El identificador se codifica porque viaja como segmento de ruta: uno que
+  /// contenga `/` o caracteres reservados no encajaria con `/reader/:storyId` y
+  /// la navegacion fallaria. `go_router` lo decodifica al leer el parametro.
+  static String readerPath(String storyId) =>
+      '/reader/${Uri.encodeComponent(storyId)}';
 
   /// Rutas accesibles sin sesión iniciada.
   static const publicRoutes = <String>[
