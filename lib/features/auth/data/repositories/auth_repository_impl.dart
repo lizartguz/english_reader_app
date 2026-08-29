@@ -2,6 +2,7 @@ import '../../../../core/constants/app_messages.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/auth/auth_session_transport.dart';
 import '../../../../core/auth/session_restorer.dart';
+import '../../../../core/auth/session_scoped_cache.dart';
 import '../../../../core/auth/session_token_store.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/device_identity_service.dart';
@@ -17,12 +18,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required AuthSessionTransport authSessionTransport,
     required SessionTokenStore tokenStore,
     required SessionRestorer sessionRestorer,
+    required List<SessionScopedCache> sessionCaches,
     required PreferencesService preferences,
     required DeviceIdentityService deviceIdentity,
   }) : _remoteDataSource = remoteDataSource,
        _authSessionTransport = authSessionTransport,
        _tokenStore = tokenStore,
        _sessionRestorer = sessionRestorer,
+       _sessionCaches = sessionCaches,
        _preferences = preferences,
        _deviceIdentity = deviceIdentity;
 
@@ -30,6 +33,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthSessionTransport _authSessionTransport;
   final SessionTokenStore _tokenStore;
   final SessionRestorer _sessionRestorer;
+  final List<SessionScopedCache> _sessionCaches;
   final PreferencesService _preferences;
   final DeviceIdentityService _deviceIdentity;
 
@@ -145,13 +149,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<void> _persistSession(AuthSession session) async {
+    // Otra cuenta puede iniciar sesión en el mismo proceso: lo descargado por
+    // la anterior no debe quedar accesible.
+    _clearSessionCaches();
     await _tokenStore.writeAccessToken(session.accessToken);
     // En Web `refreshToken` llega nulo: queda en la cookie HttpOnly de la API.
     await _tokenStore.writeRefreshToken(session.refreshToken);
     await _preferences.setBool(StorageKeys.isLoggedIn, true);
   }
 
+  void _clearSessionCaches() {
+    for (final cache in _sessionCaches) {
+      cache.clear();
+    }
+  }
+
   Future<void> clearSession() async {
+    // Se hace aquí y no en el bloc porque hay cierres que no pasan por él:
+    // una sesión invalidada desde otro dispositivo o una cookie ya vencida.
+    _clearSessionCaches();
     await _tokenStore.clear();
     await _preferences.setBool(StorageKeys.isLoggedIn, false);
   }

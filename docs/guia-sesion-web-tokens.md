@@ -141,6 +141,22 @@ La «bandera local» es `is_logged_in` en `SharedPreferences`. Es solo un boolea
 no un secreto: sirve para no llamar a la API cuando el usuario nunca inició
 sesión.
 
+### Cierre de sesión
+
+`AuthRepositoryImpl.clearSession()` es el punto por el que pasan **todos** los
+cierres: el botón de salir, una sesión invalidada desde otro dispositivo y una
+cookie de refresco ya vencida al arrancar. Ahí se borra el token local, se baja
+la bandera `is_logged_in` y se vacían las cachés de sesión.
+
+Esas cachés son las que implementan `SessionScopedCache` —hoy solo
+`StoryAssetLoader`, que guarda portadas y audio que la API entrega únicamente
+con sesión activa—. Se vacían también al **iniciar** sesión, porque puede
+tratarse de otra cuenta en el mismo proceso.
+
+Si añades una caché con datos privados del usuario, impleméntala como
+`SessionScopedCache` y regístrala en `sessionCaches` dentro de
+`app_dependencies.dart`. Es lo único que hace falta para que se limpie sola.
+
 ---
 
 ## Mapa de archivos
@@ -152,6 +168,7 @@ sesión.
 | `lib/core/auth/auth_session_transport.dart` | Decide, según la plataforma, qué `clientType` se envía y si el refresh viaja por cookie. Es el interruptor del que dependen los demás. |
 | `lib/core/auth/session_token_store.dart` | Concentra **dónde vive cada token**. En Web: access en memoria, refresh en ninguna parte. En nativo: ambos en almacenamiento seguro. |
 | `lib/core/auth/session_restorer.dart` | Interfaz mínima (`restoreSession()`) para recuperar la sesión sin credenciales. Existe para que la capa de datos no dependa del cliente HTTP completo y para poder sustituirla en pruebas. |
+| `lib/core/auth/session_scoped_cache.dart` | Interfaz de las cachés en memoria con datos privados del usuario. La capa de auth las vacía sin conocerlas en detalle. |
 
 ### Lectura de la cookie CSRF
 
@@ -171,7 +188,8 @@ fachada y dos implementaciones.
 |---------|-----------|
 | `lib/core/network/api_client.dart` | Implementa `SessionRestorer`. Añade `withCredentials` y `X-CSRF-Token` en Web, usa `SessionTokenStore` en vez del storage directo, y renueva con cookie o con token del cuerpo según la plataforma. |
 | `lib/features/auth/data/repositories/auth_repository_impl.dart` | Envía el `clientType` correcto, ya no persiste tokens por su cuenta, y recupera la sesión con la cookie al arrancar en Web. |
-| `lib/app/di/app_dependencies.dart` | Crea el `SessionTokenStore` y lo comparte entre el cliente HTTP y el repositorio. Le pasa el `ApiClient` como `sessionRestorer`. |
+| `lib/app/di/app_dependencies.dart` | Crea el `SessionTokenStore` y lo comparte entre el cliente HTTP y el repositorio. Le pasa el `ApiClient` como `sessionRestorer` y la lista de `sessionCaches`. |
+| `lib/core/media/story_asset_loader.dart` | Implementa `SessionScopedCache`: sus portadas y audio se vacían en cada cambio de sesión. |
 | `lib/app/config/app_config.dart` | Expone `csrfCookieName`, configurable por `--dart-define=CSRF_COOKIE_NAME`. |
 
 ### Pruebas
@@ -180,6 +198,7 @@ fachada y dos implementaciones.
 |---------|-----------|
 | `test/core/auth/auth_session_transport_test.dart` | Que Web use `app_web` y nativo use `mobile`. |
 | `test/features/auth/auth_repository_impl_test.dart` | Que en Web no quede ningún token en disco, que el logout no mande el refresh por el cuerpo, y que la sesión se recupere —o se cierre— tras recargar. |
+| `test/core/media/story_asset_loader_test.dart` | Que vaciar la caché obligue a volver a descargar el recurso. |
 | `e2e/readeriz_web_session_security.spec.mjs` | La verificación real, con navegador y API de verdad. |
 
 ---
@@ -298,6 +317,7 @@ La prueba E2E de este ajuste comprueba cuatro cosas contra la API real:
 
 ## Referencias
 
+- `docs/guia-cache-de-recursos-privados.md` — cómo funciona la caché de portadas y audio, y cómo registrar una nueva.
 - `.handoff/auditoria-seguridad-flutter-readeriz.md` — hallazgo original y estado.
 - `docs/planning/08-sesion-seguridad-dispositivo.md` — política de sesión y almacenamiento.
 - `docs/planning/03-integracion-api-flutter.md` — contrato con la API.

@@ -73,6 +73,8 @@ class AppDependencies {
       authSessionTransport: authSessionTransport,
       tokenStore: tokenStore,
       sessionRestorer: apiClient,
+      // Cachés privadas que deben vaciarse en cada cambio de sesión.
+      sessionCaches: [storyAssetLoader],
       preferences: preferences,
       deviceIdentity: deviceIdentity,
     );

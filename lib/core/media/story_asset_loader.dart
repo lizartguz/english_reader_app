@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
+import '../auth/session_scoped_cache.dart';
 import '../constants/app_messages.dart';
 import '../network/api_client.dart';
 
 /// Descarga recursos de historias que la API entrega solo con sesión activa.
-class StoryAssetLoader {
+class StoryAssetLoader implements SessionScopedCache {
   StoryAssetLoader(this._apiClient);
 
   final ApiClient _apiClient;
@@ -25,6 +26,7 @@ class StoryAssetLoader {
   }
 
   /// Libera las portadas guardadas al cerrar sesión o cambiar de usuario.
+  @override
   void clear() {
     _cache.clear();
     _inFlight.clear();

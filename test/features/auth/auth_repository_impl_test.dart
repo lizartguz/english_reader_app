@@ -1,5 +1,6 @@
 import 'package:english_reader_app/core/auth/auth_session_transport.dart';
 import 'package:english_reader_app/core/auth/session_restorer.dart';
+import 'package:english_reader_app/core/auth/session_scoped_cache.dart';
 import 'package:english_reader_app/core/auth/session_token_store.dart';
 import 'package:english_reader_app/core/constants/storage_keys.dart';
 import 'package:english_reader_app/core/storage/device_identity_service.dart';
@@ -106,6 +107,58 @@ void main() {
       expect(preferences.values[StorageKeys.isLoggedIn], isFalse);
     });
 
+    test('vacia las caches privadas al cerrar sesion', () async {
+      final cache = _FakeSessionScopedCache();
+      final repository = _repository(
+        remote: _FakeAuthRemoteDataSource(
+          session: _session(refreshToken: 'refresh-token'),
+        ),
+        storage: _FakeSecureStorage(),
+        preferences: _FakePreferencesService(),
+        transport: const AuthSessionTransport(isWeb: false),
+        sessionCaches: [cache],
+      );
+
+      await repository.logout();
+
+      expect(cache.clears, 1);
+    });
+
+    test('vacia las caches privadas al iniciar sesion con otra cuenta', () async {
+      final cache = _FakeSessionScopedCache();
+      final repository = _repository(
+        remote: _FakeAuthRemoteDataSource(
+          session: _session(refreshToken: 'refresh-token'),
+        ),
+        storage: _FakeSecureStorage(),
+        preferences: _FakePreferencesService(),
+        transport: const AuthSessionTransport(isWeb: false),
+        sessionCaches: [cache],
+      );
+
+      await repository.login(email: 'otro@test.local', password: 'Clave123');
+
+      expect(cache.clears, 1);
+    });
+
+    test('vacia las caches privadas cuando la sesion ya no es valida', () async {
+      final cache = _FakeSessionScopedCache();
+      final repository = _repository(
+        remote: _FakeAuthRemoteDataSource(session: _session(refreshToken: null)),
+        storage: _FakeSecureStorage(),
+        preferences: _FakePreferencesService()
+          ..values[StorageKeys.isLoggedIn] = true,
+        transport: const AuthSessionTransport(isWeb: true),
+        sessionRestorer: _FakeSessionRestorer(succeeds: false),
+        sessionCaches: [cache],
+      );
+
+      // Este cierre no pasa por el bloc de autenticación: si la limpieza
+      // dependiera de él, los recursos privados quedarían en memoria.
+      expect(await repository.verifySession(), isNull);
+      expect(cache.clears, 1);
+    });
+
     test('logout Web no envia refresh token por cuerpo', () async {
       final remote = _FakeAuthRemoteDataSource(
         session: _session(refreshToken: null),
@@ -135,6 +188,7 @@ AuthRepositoryImpl _repository({
   required AuthSessionTransport transport,
   SessionTokenStore? tokenStore,
   _FakeSessionRestorer? sessionRestorer,
+  List<SessionScopedCache> sessionCaches = const [],
 }) {
   return AuthRepositoryImpl(
     remoteDataSource: remote,
@@ -143,6 +197,7 @@ AuthRepositoryImpl _repository({
         tokenStore ??
         SessionTokenStore(transport: transport, secureStorage: storage),
     sessionRestorer: sessionRestorer ?? _FakeSessionRestorer(),
+    sessionCaches: sessionCaches,
     preferences: preferences,
     deviceIdentity: _FakeDeviceIdentityService(),
   );
@@ -271,5 +326,14 @@ class _FakeSessionRestorer implements SessionRestorer {
     if (!succeeds) return false;
     await onRestore?.call();
     return true;
+  }
+}
+
+class _FakeSessionScopedCache implements SessionScopedCache {
+  int clears = 0;
+
+  @override
+  void clear() {
+    clears += 1;
   }
 }
