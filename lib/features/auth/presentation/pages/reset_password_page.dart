@@ -4,14 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_keys.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/security/browser_url_sanitizer.dart';
 import '../cubit/account_cubit.dart';
 import '../widgets/auth_form_scaffold.dart';
 
 /// Pantalla para definir una contraseña nueva con el token del correo.
 class ResetPasswordPage extends StatefulWidget {
-  const ResetPasswordPage({this.initialToken, super.key});
+  const ResetPasswordPage({this.initialToken, this.cleanLocation, super.key});
 
   final String? initialToken;
+  final String? cleanLocation;
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -19,17 +21,45 @@ class ResetPasswordPage extends StatefulWidget {
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
+  late final String _initialToken = _resolveInitialToken();
   late final TextEditingController _tokenController = TextEditingController(
-    text: widget.initialToken ?? '',
+    text: _initialToken,
   );
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _hideUrlTokenAfterRender();
+  }
 
   @override
   void dispose() {
     _tokenController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Borra el token de la URL Web sin quitarlo del formulario ya inicializado.
+  void _hideUrlTokenAfterRender() {
+    if (_initialToken.trim().isEmpty) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      removeSensitiveQueryParameterFromBrowserUrl('token');
+      final cleanLocation = widget.cleanLocation;
+      if (!mounted || cleanLocation == null) return;
+
+      context.replace(cleanLocation, extra: _initialToken);
+    });
+  }
+
+  /// Resuelve el token desde el router o desde la URL Web con hash route.
+  String _resolveInitialToken() {
+    final routeToken = widget.initialToken?.trim();
+    if (routeToken != null && routeToken.isNotEmpty) return routeToken;
+
+    return readSensitiveQueryParameterFromBrowserUrl('token')?.trim() ?? '';
   }
 
   /// Acepta el token suelto o el enlace completo recibido por correo.

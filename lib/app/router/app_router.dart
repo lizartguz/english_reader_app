@@ -56,10 +56,16 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.resetPassword,
-        builder: (context, state) => _accountFlow(
-          context,
-          ResetPasswordPage(initialToken: state.uri.queryParameters['token']),
-        ),
+        builder: (context, state) {
+          final routeData = _resetPasswordRouteData(state);
+          return _accountFlow(
+            context,
+            ResetPasswordPage(
+              initialToken: routeData.initialToken,
+              cleanLocation: routeData.cleanLocation,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.stories,
@@ -122,6 +128,74 @@ class AppRouter {
       child: child,
     );
   }
+
+  /// Extrae el token de reset y prepara la ruta sin datos sensibles.
+  static _ResetPasswordRouteData _resetPasswordRouteData(GoRouterState state) {
+    final queryParameters = _resetQueryParameters(state.uri);
+    final tokenFromRoute = _firstQueryValue(queryParameters, 'token');
+    final tokenFromExtra = state.extra is String ? state.extra as String : null;
+    final initialToken = _firstNonEmpty(tokenFromRoute, tokenFromExtra);
+    final cleanLocation = tokenFromRoute == null
+        ? null
+        : _cleanResetPasswordLocation(queryParameters);
+
+    return _ResetPasswordRouteData(
+      initialToken: initialToken,
+      cleanLocation: cleanLocation,
+    );
+  }
+
+  /// Soporta query normal y hash route, ambos usados por Flutter Web.
+  static Map<String, List<String>> _resetQueryParameters(Uri uri) {
+    if (uri.queryParametersAll.isNotEmpty) return uri.queryParametersAll;
+    if (uri.fragment.isEmpty) return const {};
+
+    return Uri.tryParse(uri.fragment)?.queryParametersAll ?? const {};
+  }
+
+  /// Devuelve el primer valor útil sin exponer listas al widget.
+  static String? _firstQueryValue(
+    Map<String, List<String>> queryParameters,
+    String key,
+  ) {
+    final values = queryParameters[key];
+    if (values == null || values.isEmpty) return null;
+
+    return _firstNonEmpty(values.first);
+  }
+
+  /// Conserva parámetros no sensibles al reemplazar la URL del navegador.
+  static String _cleanResetPasswordLocation(
+    Map<String, List<String>> queryParameters,
+  ) {
+    final cleanParameters = <String, String>{};
+    for (final entry in queryParameters.entries) {
+      if (entry.key == 'token' || entry.value.isEmpty) continue;
+      cleanParameters[entry.key] = entry.value.first;
+    }
+
+    if (cleanParameters.isEmpty) return AppRoutes.resetPassword;
+
+    return Uri(
+      path: AppRoutes.resetPassword,
+      queryParameters: cleanParameters,
+    ).toString();
+  }
+
+  /// Normaliza valores vacíos para no disparar limpiezas innecesarias.
+  static String? _firstNonEmpty(String? primary, [String? fallback]) {
+    final normalizedPrimary = primary?.trim();
+    if (normalizedPrimary != null && normalizedPrimary.isNotEmpty) {
+      return normalizedPrimary;
+    }
+
+    final normalizedFallback = fallback?.trim();
+    if (normalizedFallback != null && normalizedFallback.isNotEmpty) {
+      return normalizedFallback;
+    }
+
+    return null;
+  }
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -137,4 +211,12 @@ class GoRouterRefreshStream extends ChangeNotifier {
     _subscription.cancel();
     super.dispose();
   }
+}
+
+/// Datos seguros que la ruta de reset entrega al formulario.
+class _ResetPasswordRouteData {
+  const _ResetPasswordRouteData({this.initialToken, this.cleanLocation});
+
+  final String? initialToken;
+  final String? cleanLocation;
 }

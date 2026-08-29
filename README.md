@@ -10,6 +10,7 @@ Aplicacion Flutter para usuarios cliente de Readeriz.
 - Normalizacion de errores por red, sesion, permisos, no encontrado, conflicto, validacion, rate limit y fallos 5xx.
 - Sesion movil con `clientType: mobile`, refresh token en almacenamiento seguro y verificacion inicial.
 - Sesion Flutter Web con `clientType: app_web`, refresh token en cookie HttpOnly y CSRF por cookie legible.
+- Reset password Web limpia `?token=` de la URL tras leerlo para evitar exposicion en la barra o historial.
 - Manejo global de sesion expirada o invalidada con retorno a login.
 - Navegacion con `go_router` y rutas protegidas.
 - Doble back para salir en Android desde la pantalla principal.

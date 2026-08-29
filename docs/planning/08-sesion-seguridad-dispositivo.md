@@ -56,6 +56,14 @@ al alcance de cualquier XSS. Por eso:
 En plataformas nativas ambos tokens siguen en almacenamiento seguro, respaldado
 por Keystore/Keychain.
 
+## Token de recuperación en Web
+
+El token de recuperación de contraseña no se persiste, pero puede llegar en la
+URL del enlace enviado por correo. En Flutter Web la pantalla
+`/reset-password` debe copiarlo al formulario y limpiar la URL con
+`history.replaceState`, conservando cualquier otro parámetro no sensible. Así el
+token no queda expuesto en la barra ni en la entrada actual del historial.
+
 El `device_id` identifica la instalación/dispositivo y debe mantenerse incluso después de cerrar sesión, salvo que se limpie la app o se reinstale.
 
 ## Device ID

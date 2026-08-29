@@ -47,6 +47,11 @@ Los tokens deben guardarse con almacenamiento seguro cuando la plataforma lo per
 Cuando Flutter Web renueva sesión, debe enviar cookies del navegador y repetir
 la cookie CSRF legible en la cabecera `X-CSRF-Token`.
 
+En recuperación de contraseña Web, la ruta pública `/reset-password` puede
+recibir `?token=...` desde el correo. La app debe leer ese token una sola vez y
+limpiar la URL visible con `history.replaceState` para que no permanezca en la
+barra ni en la entrada actual del historial del navegador.
+
 ## Dispositivo único por usuario
 
 La app debe enviar un identificador de dispositivo al iniciar sesión.

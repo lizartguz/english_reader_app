@@ -85,6 +85,23 @@ Funciona porque un sitio de terceros puede *provocar* la petición, pero no pued
 
 ## Recorrido de los cuatro momentos clave
 
+### Recuperación de contraseña
+
+El enlace de recuperación puede abrir Readeriz Web con un token en la URL:
+
+```text
+https://app.tudominio.com/reset-password?token=...
+```
+
+Ese token sirve una sola vez y no debe quedarse visible en la barra del
+navegador ni en la entrada actual del historial. Al cargar la pantalla de nueva
+contraseña, Flutter lee el token, lo deja dentro del formulario y ejecuta
+`history.replaceState` para reemplazar la URL por la misma ruta sin `token`.
+
+El usuario no pierde el flujo: puede definir la contraseña sin copiar nada. Si
+pega el enlace completo dentro del campo manualmente, la app extrae solo el
+valor de `token` antes de enviarlo a la API.
+
 ### Inicio de sesión (Web)
 
 ```text
@@ -182,6 +199,16 @@ fachada y dos implementaciones.
 | `lib/core/network/csrf_token_reader_web.dart` | Lee `document.cookie` con el paquete `web`. |
 | `lib/core/network/csrf_token_reader_stub.dart` | Devuelve `null`. En nativo no hay cookies de navegador. |
 
+### Limpieza del token de recuperación
+
+| Archivo | Qué hace |
+|---------|----------|
+| `lib/core/security/browser_url_sanitizer.dart` | Fachada condicional para limpiar parámetros sensibles de la URL visible. |
+| `lib/core/security/browser_url_sanitizer_web.dart` | Usa `history.replaceState` para reemplazar la entrada actual del historial en Flutter Web. |
+| `lib/core/security/browser_url_sanitizer_stub.dart` | No hace cambios en nativo, donde no existe historial de navegador. |
+| `lib/core/security/url_query_sanitizer.dart` | Quita `token` de URLs normales y de rutas hash sin alterar otros parámetros. |
+| `lib/features/auth/presentation/pages/reset_password_page.dart` | Lee el token inicial del enlace, lo mantiene en el formulario y solicita limpiar la URL tras el primer render. |
+
 ### Integración
 
 | Archivo | Qué cambió |
@@ -199,7 +226,10 @@ fachada y dos implementaciones.
 | `test/core/auth/auth_session_transport_test.dart` | Que Web use `app_web` y nativo use `mobile`. |
 | `test/features/auth/auth_repository_impl_test.dart` | Que en Web no quede ningún token en disco, que el logout no mande el refresh por el cuerpo, y que la sesión se recupere —o se cierre— tras recargar. |
 | `test/core/media/story_asset_loader_test.dart` | Que vaciar la caché obligue a volver a descargar el recurso. |
+| `test/core/security/browser_url_sanitizer_test.dart` | Que la limpieza retire `token` y conserve otros parámetros, incluso con rutas hash. |
+| `test/features/auth/reset_password_page_test.dart` | Que el reset conserve el token leído y extraiga el token si se pega el enlace completo. |
 | `e2e/readeriz_web_session_security.spec.mjs` | La verificación real, con navegador y API de verdad. |
+| `e2e/readeriz_web_reset_password_security.spec.mjs` | Que la UI Web real limpie la URL y aún envíe el token al endpoint de reset. |
 
 ---
 
