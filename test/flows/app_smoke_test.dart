@@ -15,6 +15,7 @@ import 'package:english_reader_app/features/stories/domain/entities/story.dart';
 import 'package:english_reader_app/features/stories/domain/repositories/stories_repository.dart';
 import 'package:english_reader_app/features/vocabulary/domain/entities/vocabulary_entry.dart';
 import 'package:english_reader_app/features/vocabulary/domain/repositories/vocabulary_repository.dart';
+import 'package:english_reader_app/core/network/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +38,9 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          // El detalle de palabra construye su reproductor con el ApiClient del
+          // arbol: el audio de pronunciacion lo sirve la API, no el proveedor.
+          Provider<ApiClient>.value(value: _FakeApiClient()),
           Provider<AuthRepository>.value(value: authRepository),
           Provider<StoriesRepository>.value(
             value: _FakeStoriesRepository(store),
@@ -370,3 +374,9 @@ const _word = WordDetail(
   pronunciations: [],
   isSaved: false,
 );
+
+/// El smoke test no reproduce audio: basta con que el ApiClient exista.
+class _FakeApiClient implements ApiClient {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}

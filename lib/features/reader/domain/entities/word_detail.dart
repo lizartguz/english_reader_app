@@ -34,11 +34,16 @@ class WordDetail extends Equatable {
     return translations.first.translation;
   }
 
-  /// Prioriza el primer audio remoto válido entregado por la API.
-  String? get preferredAudioUrl {
+  /// Primera pronunciación que tiene audio disponible.
+  ///
+  /// Se expone el identificador y no la URL a propósito: el audio no se
+  /// descarga del proveedor externo, se pide a la API, que lo sirve desde su
+  /// propio dominio. Así el dispositivo del lector nunca contacta a un tercero
+  /// que sabría su IP y qué palabra está consultando.
+  String? get preferredAudioPronunciationId {
     for (final pronunciation in pronunciations) {
       final audioUrl = pronunciation.audioUrl?.trim();
-      if (audioUrl != null && audioUrl.isNotEmpty) return audioUrl;
+      if (audioUrl != null && audioUrl.isNotEmpty) return pronunciation.id;
     }
     return null;
   }

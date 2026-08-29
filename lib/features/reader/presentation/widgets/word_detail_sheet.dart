@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/accessibility/app_semantics.dart';
 import '../../../../core/constants/app_keys.dart';
 import '../../domain/entities/word_detail.dart';
 import '../services/word_pronunciation_player.dart';
+import '../../../../core/network/api_client.dart';
 
 /// Modal de detalle que muestra significado, ejemplos y pronunciación.
 class WordDetailSheet extends StatefulWidget {
@@ -33,7 +35,8 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   void initState() {
     super.initState();
     _pronunciationPlayer =
-        widget.pronunciationPlayer ?? PluginWordPronunciationPlayer();
+        widget.pronunciationPlayer ??
+        PluginWordPronunciationPlayer(apiClient: context.read<ApiClient>());
   }
 
   @override

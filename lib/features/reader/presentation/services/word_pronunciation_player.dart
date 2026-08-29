@@ -1,6 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../domain/entities/word_detail.dart';
 
 /// Origen usado para reproducir la pronunciación de una palabra.
@@ -20,29 +21,44 @@ abstract class WordPronunciationPlayer {
   Future<void> dispose();
 }
 
-/// Reproduce audio remoto de la API y usa TTS local como respaldo.
+/// Reproduce el audio servido por la API y usa TTS local como respaldo.
 class PluginWordPronunciationPlayer implements WordPronunciationPlayer {
-  PluginWordPronunciationPlayer({AudioPlayer? audioPlayer, FlutterTts? tts})
-    : _audioPlayer = audioPlayer ?? AudioPlayer(),
-      _tts = tts ?? FlutterTts();
+  PluginWordPronunciationPlayer({
+    required ApiClient apiClient,
+    AudioPlayer? audioPlayer,
+    FlutterTts? tts,
+  }) : _apiClient = apiClient,
+       _audioPlayer = audioPlayer ?? AudioPlayer(),
+       _tts = tts ?? FlutterTts();
 
+  final ApiClient _apiClient;
   final AudioPlayer _audioPlayer;
   final FlutterTts _tts;
 
-  /// Intenta primero la URL remota porque la API es la fuente de contenido.
+  /// Pide el audio a la API y, si no hay, recurre a la voz local.
+  ///
+  /// El audio llega como bytes desde nuestro propio dominio en vez de
+  /// reproducirse por URL del proveedor externo: el dispositivo no contacta a
+  /// terceros y la Content-Security-Policy de la versión Web puede seguir
+  /// permitiendo solo el origen propio.
   @override
   Future<PronunciationPlaybackResult> play(WordDetail word) async {
     await _stopCurrentPlayback();
 
-    final audioUrl = word.preferredAudioUrl;
-    if (audioUrl != null) {
+    final pronunciationId = word.preferredAudioPronunciationId;
+    if (pronunciationId != null) {
       try {
-        await _audioPlayer.play(UrlSource(audioUrl));
+        // El identificador se codifica aunque venga de la API: un segmento con
+        // caracteres reservados podría alterar la ruta.
+        final bytes = await _apiClient.getBytes(
+          '/app/words/pronunciations/${Uri.encodeComponent(pronunciationId)}/audio',
+        );
+        await _audioPlayer.play(BytesSource(bytes));
         return const PronunciationPlaybackResult(
           PronunciationPlaybackSource.remoteAudio,
         );
       } catch (_) {
-        // Si la URL temporal expiró o falla la red, se mantiene la experiencia.
+        // Sin audio disponible o sin red, se mantiene la experiencia con TTS.
       }
     }
 

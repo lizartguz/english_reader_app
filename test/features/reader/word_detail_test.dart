@@ -20,6 +20,7 @@ void main() {
       isSaved: false,
     );
 
-    expect(word.preferredAudioUrl, 'https://cdn.example.com/hello.mp3');
+    // Se expone el id, no la URL: el audio lo sirve la API, no el proveedor.
+    expect(word.preferredAudioPronunciationId, isNotNull);
   });
 }

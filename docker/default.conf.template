@@ -33,10 +33,13 @@ server {
     #   CDN. Sin ellas la app se renderiza sin una sola letra.
     # - img-src incluye blob: por las portadas privadas, que se descargan
     #   autenticadas y se muestran como URL de objeto.
+    # - media-src incluye blob: por el audio de pronunciacion: la app lo pide a
+    #   esta API como bytes y lo reproduce desde una URL de objeto, en vez de
+    #   apuntar al proveedor externo. Sin blob: no suena nada en Web.
     # - connect-src se completa en la construccion con el origen real de la API.
     # - frame-ancestors 'none' duplica X-Frame-Options para navegadores que ya
     #   solo atienden la CSP.
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ${API_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'self' ${API_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
 
     # Los recursos con hash en el nombre se pueden cachear sin limite.
     location /assets/ {
