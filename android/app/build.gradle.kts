@@ -37,7 +37,11 @@ gradle.taskGraph.whenReady {
 
 android {
     namespace = "com.artguz.english_reader_app"
-    compileSdk = flutter.compileSdkVersion
+    // Por encima del valor por defecto de Flutter (36) porque
+    // flutter_secure_storage 11 compila contra la API 37 y Gradle exige que la
+    // app compile al menos con la misma. No cambia el comportamiento en
+    // ejecucion: eso lo define targetSdk, que sigue en el valor de Flutter.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
