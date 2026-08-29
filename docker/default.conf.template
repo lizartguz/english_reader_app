@@ -1,0 +1,71 @@
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # No se anuncia la version del servidor.
+    server_tokens off;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/javascript application/json application/wasm image/svg+xml;
+
+    # Cabeceras de seguridad (hallazgo FLT-SEC-008).
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # HSTS: solo tiene efecto sobre HTTPS, asi que en HTTP el navegador la
+    # ignora. Se declara aqui para que quede activa en cuanto haya certificado.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Content-Security-Policy. Cada directiva se midio contra el build real:
+    #
+    # - script-src no necesita 'unsafe-eval' porque la imagen compila con
+    #   `flutter build web --csp`, que desactiva la generacion dinamica de
+    #   codigo. Si se quita esa bandera, la app deja de cargar con esta politica.
+    # - 'wasm-unsafe-eval' si hace falta: CanvasKit instancia WebAssembly.
+    # - style-src necesita 'unsafe-inline' porque el runtime de Flutter inyecta
+    #   estilos al montarse. No es evitable desde la app.
+    # - font-src 'self': las tipografias van empaquetadas, no se piden a ningun
+    #   CDN. Sin ellas la app se renderiza sin una sola letra.
+    # - img-src incluye blob: por las portadas privadas, que se descargan
+    #   autenticadas y se muestran como URL de objeto.
+    # - connect-src se completa en la construccion con el origen real de la API.
+    # - frame-ancestors 'none' duplica X-Frame-Options para navegadores que ya
+    #   solo atienden la CSP.
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' ${API_ORIGIN}; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+
+    # Los recursos con hash en el nombre se pueden cachear sin limite.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location /canvaskit/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # El index apunta a los archivos nuevos de cada despliegue: nunca se cachea.
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        expires -1;
+    }
+
+    # El service worker decide cuando actualizar: si se cachea, la app queda
+    # clavada en una version vieja.
+    location = /flutter_service_worker.js {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        expires -1;
+    }
+
+    # Ruta desconocida: la resuelve el router de Flutter, no nginx.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

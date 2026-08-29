@@ -1,0 +1,19 @@
+# Salidas de compilacion: la imagen las genera desde cero.
+build/
+.dart_tool/
+.flutter-plugins-dependencies
+
+# Herramientas y artefactos locales que no participan en el build.
+node_modules/
+test-results/
+playwright-report/
+.handoff/
+.git/
+.idea/
+.vscode/
+android/.gradle/
+ios/Pods/
+
+# Configuracion local: la URL de la API entra por --build-arg.
+android/local.properties
+*.log

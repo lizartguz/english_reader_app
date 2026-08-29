@@ -317,6 +317,7 @@ La prueba E2E de este ajuste comprueba cuatro cosas contra la API real:
 
 ## Referencias
 
+- `docs/guia-despliegue-web-y-csp.md` — la CSP que gobierna `connect-src`, y por qué las tipografías van empaquetadas.
 - `docs/guia-renovacion-de-sesion.md` — cómo se recupera un 401 y por qué la renovación es una sola aunque fallen varias peticiones.
 - `docs/guia-cache-de-recursos-privados.md` — cómo funciona la caché de portadas y audio, y cómo registrar una nueva.
 - `.handoff/auditoria-seguridad-flutter-readeriz.md` — hallazgo original y estado.

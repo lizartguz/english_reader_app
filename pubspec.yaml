@@ -34,6 +34,21 @@ flutter:
   assets:
     - assets/images/logo/
 
+  # Roboto se empaqueta en vez de dejar que CanvasKit la descargue de
+  # fonts.gstatic.com en cada carga. Sin ella, Flutter Web no tiene con que
+  # dibujar texto y la app se ve sin una sola letra si ese CDN no responde.
+  # Los archivos vienen del propio SDK de Flutter (licencia Apache 2.0, ver
+  # assets/fonts/LICENSE-Roboto.txt).
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: assets/fonts/roboto-regular.ttf
+          weight: 400
+        - asset: assets/fonts/roboto-medium.ttf
+          weight: 500
+        - asset: assets/fonts/roboto-bold.ttf
+          weight: 700
+
 flutter_launcher_icons:
   android: true
   ios: true
