@@ -64,6 +64,11 @@ En Android emulator usa por defecto:
 http://10.0.2.2:3000/api/v1
 ```
 
+En Android, el HTTP claro queda permitido solo para variantes `debug` y
+`profile`, limitado a hosts locales (`localhost`, `127.0.0.1` y `10.0.2.2`). En
+`release`, Android usa una configuración de red que bloquea HTTP y exige que la
+API productiva sea HTTPS.
+
 ## Desarrollo explícito en Web
 
 ```powershell
@@ -115,6 +120,11 @@ flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=https://api.
 ## Reglas de seguridad
 
 En `development`, la app permite URLs locales.
+
+En Android, esa excepción de HTTP local solo existe en `debug` y `profile`.
+`release` no acepta tráfico HTTP claro aunque alguien pase una URL `http://`;
+además, `APP_ENV=staging` y `APP_ENV=production` ya rechazan URLs no HTTPS al
+arrancar.
 
 En `staging` y `production`, la app exige:
 

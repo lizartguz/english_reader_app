@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Política base de release: todo tráfico HTTP claro queda bloqueado. -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

@@ -42,6 +42,14 @@ Reglas vigentes:
 - `staging` y `production` requieren HTTPS.
 - `staging` y `production` rechazan hosts locales como `localhost`, `127.0.0.1`, `0.0.0.0`, `::1` y `10.0.2.2`.
 
+Política Android de HTTP claro:
+
+- `main/release` usa `@xml/network_security_config` y bloquea `cleartext`.
+- `debug` y `profile` reemplazan esa política por
+  `@xml/dev_network_security_config`.
+- la configuración de desarrollo solo permite HTTP hacia `localhost`,
+  `127.0.0.1` y `10.0.2.2`.
+
 Ejemplo productivo:
 
 ```bash

@@ -19,6 +19,11 @@ APP_ENV
 `staging` y `production` deben recibir `API_BASE_URL` de forma explícita,
 siempre con HTTPS y sin hosts locales.
 
+En Android, la excepción de HTTP para API local está limitada por variante:
+`debug` y `profile` permiten HTTP solo hacia `localhost`, `127.0.0.1` y
+`10.0.2.2`; `release` bloquea tráfico claro desde la configuración de red del
+manifest.
+
 ## Autenticación
 
 Flutter debe autenticarse contra la API.

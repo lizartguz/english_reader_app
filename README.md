@@ -48,6 +48,10 @@ En Android emulator usa automaticamente:
 http://10.0.2.2:3000/api/v1
 ```
 
+Android permite HTTP claro solo en variantes `debug` y `profile`, y únicamente
+para hosts locales de desarrollo. La variante `release` mantiene HTTP bloqueado
+y debe usar HTTPS.
+
 Tambien puede configurarse al compilar o ejecutar:
 
 ```bash
