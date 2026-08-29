@@ -38,6 +38,9 @@ Pruebas iniciales implementadas:
 - `test/core/network/api_client_error_test.dart`
   valida traducción amigable de errores de red, sesión, permisos, 404, rate
   limit y 5xx.
+- `test/core/network/api_payload_test.dart`
+  valida que respuestas mal formadas de API se conviertan en `AppException`
+  controlado con codigo `invalid_payload`, sin exponer errores tecnicos.
 - `test/features/reader/reader_bloc_test.dart`
   valida carga de historia, restauración de progreso y sincronización silenciosa.
 - `test/features/reader/reader_settings_cubit_test.dart`

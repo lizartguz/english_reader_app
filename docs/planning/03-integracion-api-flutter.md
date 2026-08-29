@@ -115,6 +115,10 @@ Reglas vigentes:
   en endpoints propios de autenticación.
 - si la sesión fue invalidada o ya no puede renovarse, la app emite un evento
   global, limpia sesión local y redirige a login con mensaje amigable.
+- la envoltura de API valida `success`, `data` y `meta` antes de castear. Los
+  datasources usan `response.requireData()`, `requirePayloadMap()` y
+  `parseApiPayload()` para convertir payloads inesperados en `AppException`
+  controlado con codigo `invalid_payload`.
 
 ## Manejo de errores
 
@@ -154,6 +158,11 @@ técnicos.
 Si la API devuelve un error técnico inesperado, Flutter no debe mostrarlo al
 usuario. Debe usar un mensaje genérico y, cuando corresponda, enviar el contexto
 necesario a los logs del backend o al mecanismo de monitoreo definido.
+
+Si la API devuelve una respuesta exitosa pero con estructura invalida, Flutter
+debe tratarla como `invalid_payload`: no debe completar modelos a medias ni
+mostrar trazas tecnicas. La guia permanente esta en
+`docs/guia-robustez-payload-api.md`.
 
 Ejemplos:
 

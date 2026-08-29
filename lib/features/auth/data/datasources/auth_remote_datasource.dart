@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/payload_guard.dart';
 import '../models/auth_session_model.dart';
 import '../models/auth_user_model.dart';
 
@@ -12,7 +13,9 @@ class AuthRemoteDataSource {
       '/auth/login',
       data: payload,
     );
-    return AuthSessionModel.fromJson(response.data!);
+    return parseApiPayload(
+      () => AuthSessionModel.fromJson(response.requireData()),
+    );
   }
 
   /// Crea la cuenta cliente y devuelve el mensaje de confirmación de la API.
@@ -49,8 +52,10 @@ class AuthRemoteDataSource {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/auth/verify-session',
     );
-    final data = response.data!;
-    return AuthUserModel.fromJson(data['user'] as Map<String, dynamic>);
+    return parseApiPayload(() {
+      final data = response.requireData();
+      return AuthUserModel.fromJson(requirePayloadMapField(data, 'user'));
+    });
   }
 
   Future<void> logout(Map<String, dynamic> payload) async {

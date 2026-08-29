@@ -9,6 +9,7 @@ import 'package:english_reader_app/core/constants/storage_keys.dart';
 import 'package:english_reader_app/core/network/api_client.dart';
 import 'package:english_reader_app/core/storage/device_identity_service.dart';
 import 'package:english_reader_app/core/storage/secure_storage_service.dart';
+import 'package:english_reader_app/core/telemetry/security_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Renovación de sesión ante varios 401 simultáneos (hallazgo FLT-SEC-007).
@@ -47,6 +48,26 @@ void main() {
       await suscripcion.cancel();
 
       expect(eventos, isEmpty);
+    });
+
+    test('registra la incidencia de seguridad sin exponer la ruta concreta', () async {
+      final entorno = _crearEntorno();
+
+      // Se pide una ruta que la API rechaza por permisos: ese error si llega al
+      // usuario y merece quedar registrado.
+      entorno.adapter.rutaProhibida = '/app/stories/01a04b6f-ae19-74';
+      try {
+        await entorno.client.get<Map<String, dynamic>>('/app/stories/01a04b6f-ae19-74');
+      } catch (_) {
+        // El rechazo es el punto de la prueba; interesa lo que quedo registrado.
+      }
+
+      final eventos = entorno.client.telemetry.history;
+      expect(eventos, isNotEmpty);
+      expect(eventos.last.type, SecurityEventType.forbidden);
+      // Con el identificador saneado: la ruta real diria que historia leyo.
+      expect(eventos.last.endpoint, '/app/stories/{id}');
+      expect(eventos.last.statusCode, 403);
     });
 
     test('una peticion rezagada se reintenta sin volver a renovar', () async {
@@ -118,6 +139,7 @@ class _Entorno {
 /// Servidor simulado: rechaza el token viejo y renueva con latencia.
 class _AdapterFalso implements HttpClientAdapter {
   int renovaciones = 0;
+  String? rutaProhibida;
   final demoraDel401 = <String, Duration>{};
 
   @override
@@ -135,6 +157,14 @@ class _AdapterFalso implements HttpClientAdapter {
         'success': true,
         'message': 'ok',
         'data': {'accessToken': _tokenNuevo, 'refreshToken': 'refresh-rotado'},
+      });
+    }
+
+    if (options.path == rutaProhibida) {
+      return _json(403, {
+        'success': false,
+        'message': 'Sin permisos.',
+        'code': 'forbidden',
       });
     }
 

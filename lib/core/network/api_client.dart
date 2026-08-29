@@ -10,7 +10,10 @@ import '../auth/session_token_store.dart';
 import '../constants/app_messages.dart';
 import '../errors/app_exception.dart';
 import '../storage/device_identity_service.dart';
+import '../telemetry/security_event.dart';
+import '../telemetry/security_telemetry.dart';
 import 'csrf_token_reader.dart';
+import 'payload_guard.dart';
 
 /// Cliente HTTP centralizado para consumir el contrato versionado de la API.
 class ApiClient implements SessionRestorer {
@@ -19,8 +22,10 @@ class ApiClient implements SessionRestorer {
     required AuthSessionTransport authSessionTransport,
     required SessionTokenStore tokenStore,
     required DeviceIdentityService deviceIdentity,
+    SecurityTelemetry? telemetry,
     @visibleForTesting Dio? dio,
   }) : _config = config,
+       _telemetry = telemetry ?? SecurityTelemetry(),
        _authSessionTransport = authSessionTransport,
        _tokenStore = tokenStore,
        _deviceIdentity = deviceIdentity,
@@ -47,12 +52,16 @@ class ApiClient implements SessionRestorer {
   final Dio _dio;
   final SessionTokenStore _tokenStore;
   final DeviceIdentityService _deviceIdentity;
+  final SecurityTelemetry _telemetry;
   final StreamController<AppException> _sessionIssues =
       StreamController<AppException>.broadcast();
   Future<bool>? _refreshFuture;
 
   /// Emite eventos cuando la API indica que la sesión local ya no sirve.
   Stream<AppException> get sessionIssues => _sessionIssues.stream;
+
+  /// Registro saneado de incidencias de seguridad observadas en el cliente.
+  SecurityTelemetry get telemetry => _telemetry;
 
   /// Ejecuta una consulta GET y normaliza la respuesta estándar de la API.
   Future<ApiPayload<T>> get<T>(
@@ -169,7 +178,33 @@ class ApiClient implements SessionRestorer {
       _notifySessionIssue(error);
     }
 
+    _recordSecurityEvent(error, statusCode, code);
     handler.reject(error);
+  }
+
+  /// Registra la incidencia sin datos que identifiquen a nadie.
+  void _recordSecurityEvent(DioException error, int? statusCode, String? code) {
+    final endpoint = error.requestOptions.path;
+    final tipo = switch (statusCode) {
+      null => SecurityEventType.apiUnavailable,
+      401 when endpoint.contains('/auth/login') =>
+        SecurityEventType.loginRejected,
+      401 when code == 'session_invalidated' =>
+        SecurityEventType.sessionInvalidated,
+      401 => SecurityEventType.sessionExpired,
+      403 => SecurityEventType.forbidden,
+      429 => SecurityEventType.rateLimited,
+      _ => null,
+    };
+
+    if (tipo == null) return;
+
+    _telemetry.record(
+      tipo,
+      endpoint: endpoint,
+      statusCode: statusCode,
+      errorCode: code,
+    );
   }
 
   /// Renueva la sesión una sola vez aunque varias peticiones fallen a la vez.
@@ -211,8 +246,8 @@ class ApiClient implements SessionRestorer {
       );
       final payload = ApiPayload<Map<String, dynamic>>.fromJson(response.data);
       final session = payload.data;
-      final nextAccessToken = session?['accessToken'] as String?;
-      final nextRefreshToken = session?['refreshToken'] as String?;
+      final nextAccessToken = optionalPayloadString(session?['accessToken']);
+      final nextRefreshToken = optionalPayloadString(session?['refreshToken']);
 
       if (nextAccessToken == null) return false;
       if (!usesCookieRefresh && nextRefreshToken == null) return false;
@@ -221,6 +256,12 @@ class ApiClient implements SessionRestorer {
       await _tokenStore.writeRefreshToken(nextRefreshToken);
       return true;
     } catch (_) {
+      // Interesa el patron, no el detalle: muchos fallos seguidos apuntan a un
+      // problema real de sesion o de red, no a un usuario concreto.
+      _telemetry.record(
+        SecurityEventType.refreshFailed,
+        endpoint: '/auth/refresh',
+      );
       return false;
     }
   }
@@ -288,30 +329,41 @@ class ApiPayload<T> {
 
   /// Convierte la envoltura de la API en un objeto tipado.
   factory ApiPayload.fromJson(dynamic json) {
-    if (json is! Map<String, dynamic>) {
-      throw const AppException(message: AppMessages.genericError);
-    }
+    final envelope = requirePayloadMap(json);
+    final rawSuccess = envelope['success'];
+    if (rawSuccess is! bool) throw invalidPayloadException();
 
-    final success = json['success'] == true;
-    if (!success) {
+    if (!rawSuccess) {
       throw AppException(
-        message: json['message'] as String? ?? AppMessages.genericError,
-        code: json['code'] as String?,
+        message:
+            optionalPayloadString(envelope['message']) ??
+            AppMessages.genericError,
+        code: optionalPayloadString(envelope['code']),
       );
     }
 
+    final rawData = envelope['data'];
+    if (rawData != null && rawData is! T) throw invalidPayloadException();
+
     return ApiPayload<T>(
-      success: success,
-      message: json['message'] as String? ?? '',
-      data: json['data'] as T?,
-      meta: json['meta'] as Map<String, dynamic>?,
+      success: rawSuccess,
+      message: optionalPayloadString(envelope['message']) ?? '',
+      data: rawData as T?,
+      meta: optionalPayloadMap(envelope['meta']),
     );
+  }
+
+  /// Devuelve `data` o falla si el endpoint debia enviar cuerpo util.
+  T requireData({String message = AppMessages.genericError}) {
+    final value = data;
+    if (value == null) throw invalidPayloadException(message: message);
+    return value;
   }
 }
 
 /// Lee el código estable de error cuando la API devuelve una respuesta controlada.
 String? _readErrorCode(dynamic data) {
-  if (data is Map<String, dynamic>) return data['code'] as String?;
+  if (data is Map<String, dynamic>) return optionalPayloadString(data['code']);
   return null;
 }
 

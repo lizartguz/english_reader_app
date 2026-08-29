@@ -1,6 +1,7 @@
 import '../../core/media/story_asset_loader.dart';
 import '../../core/auth/auth_session_transport.dart';
 import '../../core/auth/session_token_store.dart';
+import '../../core/telemetry/security_telemetry.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/device_identity_service.dart';
 import '../../core/storage/preferences_service.dart';
@@ -60,21 +61,26 @@ class AppDependencies {
       secureStorage: secureStorage,
       config: config,
     );
+    // Canal unico de incidencias de seguridad: lo comparten el cliente HTTP y
+    // el cargador de recursos para que el historial cuente una sola historia.
+    final securityTelemetry = SecurityTelemetry();
+
     final apiClient = ApiClient(
       config: config,
       authSessionTransport: authSessionTransport,
       tokenStore: tokenStore,
       deviceIdentity: deviceIdentity,
+      telemetry: securityTelemetry,
     );
 
-    final storyAssetLoader = StoryAssetLoader(apiClient);
+    final storyAssetLoader = StoryAssetLoader(apiClient, telemetry: securityTelemetry);
     final authRepository = AuthRepositoryImpl(
       remoteDataSource: AuthRemoteDataSource(apiClient),
       authSessionTransport: authSessionTransport,
       tokenStore: tokenStore,
       sessionRestorer: apiClient,
       // Cachés privadas que deben vaciarse en cada cambio de sesión.
-      sessionCaches: [storyAssetLoader],
+      sessionCaches: [storyAssetLoader, securityTelemetry],
       preferences: preferences,
       deviceIdentity: deviceIdentity,
     );

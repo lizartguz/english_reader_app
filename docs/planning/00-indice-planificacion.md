@@ -58,6 +58,12 @@ C:\xampp\htdocs\english_reader_app    -> Aplicación Flutter.
 10. `10-estandares-codigo-flutter.md`
    - Define estándares Dart/Flutter, imports, constantes, comentarios, modelos, servicios y widgets reutilizables.
 
+## Guias permanentes relacionadas
+
+- `../guia-robustez-payload-api.md`
+  - Define como validar respuestas inesperadas de la API antes de castear o
+    construir modelos en Flutter.
+
 ## Regla de impacto cruzado
 
 Cuando cambien endpoints, modelos, permisos, validaciones o formatos de respuesta en `english_reader_api`, se debe revisar el impacto en Flutter.

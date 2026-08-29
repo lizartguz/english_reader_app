@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/payload_guard.dart';
 import '../models/vocabulary_entry_model.dart';
 
 /// Data source HTTP para `/app/vocabulary`.
@@ -17,11 +18,12 @@ class VocabularyRemoteDataSource {
       queryParameters: {'page': page, 'limit': limit},
     );
 
-    return (response.data ?? const [])
-        .map(
-          (item) => VocabularyEntryModel.fromJson(item as Map<String, dynamic>),
-        )
-        .toList();
+    return parseApiPayload(
+      () => response
+          .requireData()
+          .map((item) => VocabularyEntryModel.fromJson(requirePayloadMap(item)))
+          .toList(),
+    );
   }
 
   /// Envía cambios editables de estado o notas al backend.
@@ -38,7 +40,9 @@ class VocabularyRemoteDataSource {
       },
     );
 
-    return VocabularyEntryModel.fromJson(response.data!);
+    return parseApiPayload(
+      () => VocabularyEntryModel.fromJson(response.requireData()),
+    );
   }
 
   /// Elimina el registro guardado sin borrar la palabra del diccionario.

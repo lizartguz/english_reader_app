@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../auth/session_scoped_cache.dart';
 import '../constants/app_messages.dart';
 import '../network/api_client.dart';
+import '../telemetry/security_event.dart';
+import '../telemetry/security_telemetry.dart';
 
 /// Descarga recursos de historias que la API entrega solo con sesión activa.
 ///
@@ -15,9 +17,11 @@ import '../network/api_client.dart';
 class StoryAssetLoader implements SessionScopedCache {
   StoryAssetLoader(
     this._apiClient, {
+    SecurityTelemetry? telemetry,
     int maxBytes = defaultMaxBytes,
     int maxEntries = defaultMaxEntries,
-  }) : _maxBytes = maxBytes,
+  }) : _telemetry = telemetry,
+       _maxBytes = maxBytes,
        _maxEntries = maxEntries;
 
   /// Tope de memoria de la caché. Las portadas llegan optimizadas por la API.
@@ -27,6 +31,7 @@ class StoryAssetLoader implements SessionScopedCache {
   static const int defaultMaxEntries = 50;
 
   final ApiClient _apiClient;
+  final SecurityTelemetry? _telemetry;
   final int _maxBytes;
   final int _maxEntries;
 
@@ -99,6 +104,12 @@ class StoryAssetLoader implements SessionScopedCache {
       if (cache) _store(assetId, bytes);
       return bytes;
     } catch (error) {
+      // El identificador se sanea en la telemetria: registrar cual fue diria
+      // que historia estaba leyendo esta persona.
+      _telemetry?.record(
+        SecurityEventType.assetLoadFailed,
+        endpoint: '/files/story-assets/$assetId',
+      );
       throw mapDioException(error, AppMessages.assetLoadError);
     } finally {
       _inFlight.remove(assetId);

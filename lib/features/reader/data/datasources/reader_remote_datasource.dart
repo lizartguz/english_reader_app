@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/payload_guard.dart';
 import '../../../stories/data/models/story_model.dart';
 import '../models/reading_progress_model.dart';
 import '../models/word_detail_model.dart';
@@ -12,7 +13,7 @@ class ReaderRemoteDataSource {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/app/stories/${Uri.encodeComponent(storyId)}',
     );
-    return StoryModel.fromJson(response.data!);
+    return parseApiPayload(() => StoryModel.fromJson(response.requireData()));
   }
 
   Future<WordDetailModel> lookupWord(String word) async {
@@ -20,7 +21,9 @@ class ReaderRemoteDataSource {
       '/app/words/lookup',
       queryParameters: {'word': word, 'language': 'en', 'targetLanguage': 'es'},
     );
-    return WordDetailModel.fromJson(response.data!);
+    return parseApiPayload(
+      () => WordDetailModel.fromJson(response.requireData()),
+    );
   }
 
   Future<WordDetailModel> saveVocabulary({
@@ -31,16 +34,21 @@ class ReaderRemoteDataSource {
       '/app/vocabulary',
       data: {'wordEntryId': wordEntryId, 'storyId': storyId},
     );
-    final data = response.data!;
-    return WordDetailModel.fromJson(data['word'] as Map<String, dynamic>);
+    return parseApiPayload(() {
+      final data = response.requireData();
+      return WordDetailModel.fromJson(requirePayloadMapField(data, 'word'));
+    });
   }
 
   Future<ReadingProgressModel?> getProgress(String storyId) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/app/reading-progress/${Uri.encodeComponent(storyId)}',
     );
-    if (response.data == null) return null;
-    return ReadingProgressModel.fromJson(response.data!);
+    return parseApiPayload(() {
+      final data = response.data;
+      if (data == null) return null;
+      return ReadingProgressModel.fromJson(data);
+    });
   }
 
   Future<ReadingProgressModel> saveProgress({
@@ -57,6 +65,8 @@ class ReaderRemoteDataSource {
         if (completed != null) 'completed': completed,
       },
     );
-    return ReadingProgressModel.fromJson(response.data!);
+    return parseApiPayload(
+      () => ReadingProgressModel.fromJson(response.requireData()),
+    );
   }
 }
