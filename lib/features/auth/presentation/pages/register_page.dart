@@ -27,6 +27,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   void dispose() {
+    // Vaciar antes de liberar suelta la referencia a la contraseña en cuanto
+    // se abandona la pantalla, sin esperar a que el recolector pase.
+    _passwordController.clear();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -43,7 +46,12 @@ class _RegisterPageState extends State<RegisterPage> {
       subtitle:
           'Regístrate para leer y guardar tu vocabulario en '
           '${AppInfo.displayName}.',
-      onSuccess: () => context.go(AppRoutes.login),
+      onSuccess: () {
+        // La cuenta ya está creada: la contraseña no debe seguir en memoria
+        // mientras se navega.
+        _passwordController.clear();
+        context.go(AppRoutes.login);
+      },
       child: Form(
         key: _formKey,
         child: Column(

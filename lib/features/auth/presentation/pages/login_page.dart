@@ -23,6 +23,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    // Vaciar antes de liberar suelta la referencia a la contraseña en cuanto
+    // se abandona la pantalla, sin esperar a que el recolector pase.
+    _passwordController.clear();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -31,8 +34,13 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (previous, current) => previous.message != current.message,
+      listenWhen: (previous, current) =>
+          previous.message != current.message || previous.status != current.status,
       listener: (context, state) {
+        // Con la sesión ya iniciada la contraseña no vuelve a hacer falta: se
+        // vacía sin esperar a que el router desmonte esta pantalla.
+        if (state.status == AuthStatus.authenticated) _passwordController.clear();
+
         final message = state.message;
         if (message == null || message.isEmpty) return;
         ScaffoldMessenger.of(

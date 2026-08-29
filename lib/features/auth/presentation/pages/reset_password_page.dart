@@ -36,6 +36,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   @override
   void dispose() {
+    // El token de recuperación es tan sensible como la contraseña: ambos se
+    // vacían antes de liberar, sin esperar a que el recolector pase.
+    _tokenController.clear();
+    _passwordController.clear();
     _tokenController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -68,7 +72,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return AuthFormScaffold(
       title: 'Nueva contraseña',
       subtitle: 'Pega el token del correo y define tu contraseña nueva.',
-      onSuccess: () => context.go(AppRoutes.login),
+      onSuccess: () {
+        // La contraseña ya se cambió y el token quedó consumido: ninguno de los
+        // dos debe seguir en memoria mientras se navega al login.
+        _passwordController.clear();
+        _tokenController.clear();
+        context.go(AppRoutes.login);
+      },
       child: Form(
         key: _formKey,
         child: Column(
