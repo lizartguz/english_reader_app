@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { e2eCredentials } from './support/e2e_env.mjs';
+
 /**
  * FLT-SEC-004 — el refresh token no debe persistirse en el cliente Web.
  *
@@ -10,8 +12,7 @@ import { expect, test } from '@playwright/test';
  * la contrapartida de no persistir nada.
  */
 
-const clientEmail = process.env.E2E_CLIENT_EMAIL ?? 'cliente.flutter.test@englishreader.local';
-const clientPassword = process.env.E2E_CLIENT_PASSWORD ?? 'Cliente123*';
+const { clientEmail, clientPassword } = e2eCredentials();
 const refreshCookieName = process.env.E2E_REFRESH_COOKIE ?? 'er_refresh_token';
 
 test.describe('Sesión Web segura', () => {

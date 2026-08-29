@@ -135,6 +135,11 @@ npm run e2e:web
 npm run e2e:web:report
 ```
 
+Las credenciales E2E se leen desde variables de entorno. Los defaults locales
+solo se permiten contra `localhost`, `127.0.0.1` o `10.0.2.2` fuera de CI. En
+CI, staging o una API remota, deben definirse `E2E_CLIENT_EMAIL`,
+`E2E_CLIENT_PASSWORD`, `E2E_ADMIN_EMAIL` y `E2E_ADMIN_PASSWORD` según el flujo.
+
 ## Integración con API
 
 Las pruebas deben validar que Flutter maneja correctamente:

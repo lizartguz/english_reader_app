@@ -1,11 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { PNG } from 'pngjs';
 
-const clientEmail = process.env.E2E_CLIENT_EMAIL ?? 'cliente.flutter.test@englishreader.local';
-const clientPassword = process.env.E2E_CLIENT_PASSWORD ?? 'Cliente123*';
-const adminEmail = process.env.E2E_ADMIN_EMAIL ?? 'admin@englishreader.local';
-const adminPassword = process.env.E2E_ADMIN_PASSWORD ?? 'Admin123*';
-const apiBaseUrl = process.env.API_BASE_URL ?? 'http://localhost:3000/api/v1';
+import { apiBaseUrl, e2eCredentials } from './support/e2e_env.mjs';
+
+const { clientEmail, clientPassword, adminEmail, adminPassword } =
+  e2eCredentials({ includeAdmin: true });
 
 test.describe('Readeriz Web real', () => {
   test.beforeAll(async ({ request }) => {

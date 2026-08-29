@@ -205,6 +205,10 @@ dart run tool/verify_real_api_flow.dart \
   --word=hello
 ```
 
+Esas credenciales son usuarios semilla de desarrollo local. No deben reutilizarse
+en staging, producción ni CI; en esos ambientes se deben pasar credenciales
+propias del entorno por parámetros o variables.
+
 ## Archivos protegidos
 
 Imágenes y audios deben solicitarse mediante endpoints protegidos o URLs temporales entregadas por la API.

@@ -117,6 +117,22 @@ Web:
 flutter build web --no-web-resources-cdn --dart-define=API_BASE_URL=https://api.readeriz.com/api/v1 --dart-define=APP_ENV=production
 ```
 
+## Credenciales E2E
+
+Las pruebas Playwright leen credenciales desde variables de entorno:
+
+```powershell
+$env:E2E_CLIENT_EMAIL="cliente@readeriz.test"
+$env:E2E_CLIENT_PASSWORD="..."
+$env:E2E_ADMIN_EMAIL="admin@readeriz.test"
+$env:E2E_ADMIN_PASSWORD="..."
+npm.cmd run e2e:web
+```
+
+Los usuarios semilla por defecto solo se aceptan con `API_BASE_URL` local
+(`localhost`, `127.0.0.1` o `10.0.2.2`) y fuera de CI. En CI, staging o
+producción, las credenciales deben declararse explícitamente.
+
 ## Reglas de seguridad
 
 En `development`, la app permite URLs locales.

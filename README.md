@@ -105,3 +105,8 @@ valida un bundle viejo. La API se reutiliza si ya está corriendo en el puerto
 Credenciales y URL se pueden ajustar por variables de entorno:
 `E2E_CLIENT_EMAIL`, `E2E_CLIENT_PASSWORD`, `E2E_ADMIN_EMAIL`,
 `E2E_ADMIN_PASSWORD`, `API_BASE_URL` y `E2E_WEB_PORT`.
+
+Los usuarios locales por defecto solo se usan cuando `API_BASE_URL` apunta a
+`localhost`, `127.0.0.1` o `10.0.2.2` y no se está ejecutando en CI. Para CI,
+staging o cualquier API remota, las credenciales E2E son obligatorias por
+variables de entorno.
